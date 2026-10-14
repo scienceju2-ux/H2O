@@ -1,0 +1,1730 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>물의 분해 실험하기 — 수업용 인터랙티브 슬라이드</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  /* 전기 분해 단원 테마: 전해질 수용액(딥 블루) + 수소(민트) / 산소(주황) */
+  --navy:#04101f; --navy2:#0c2340; --navy3:#14395f;
+  --ice:#8fe3ff; --water:#3fa9ff; --vapor:#dbeeff;
+  --ans:#ff5c78; --ansGlow:rgba(255,92,120,.55);
+  --gold:#ffd166; --mint:#5ef2c4; --heat:#ff8c42; --cool:#5ec8ff;
+  --h2:#5ef2c4;   /* 수소 */
+  --o2:#ff9f45;   /* 산소 */
+  --neg:#5ec8ff;  /* (-)극 */
+  --pos:#ff6b6b;  /* (+)극 */
+  --line:rgba(143,227,255,.28);
+}
+html,body{height:100%;overflow:hidden;background:#04101f;font-family:'Noto Sans KR',Pretendard,'Malgun Gothic','맑은 고딕',sans-serif;-webkit-font-smoothing:antialiased}
+body{display:flex;align-items:center;justify-content:center;cursor:pointer;user-select:none}
+
+#stage{position:relative;width:1600px;height:900px;transform-origin:center center;
+  background:radial-gradient(1200px 700px at 20% 0%,#123a63 0%,#0a1f38 45%,#050f1e 100%);
+  overflow:hidden;box-shadow:0 0 90px rgba(0,0,0,.8)}
+#bgfx{position:absolute;inset:0;z-index:0;opacity:.5}
+#bgGlow{position:absolute;inset:0;z-index:0;
+  background:radial-gradient(700px 500px at 85% 90%,rgba(63,169,255,.16),transparent 70%),
+             radial-gradient(600px 400px at 10% 85%,rgba(94,242,196,.10),transparent 70%)}
+
+/* ============ SLIDE ============ */
+.slide{position:absolute;inset:0;z-index:2;display:none;flex-direction:column;padding:30px 50px 60px}
+.slide.active{display:flex;animation:slideIn .45s cubic-bezier(.2,.8,.3,1)}
+@keyframes slideIn{from{opacity:0;transform:translateY(22px) scale(.995)}to{opacity:1;transform:none}}
+
+.shead{display:flex;align-items:center;gap:18px;flex:0 0 auto;margin-bottom:18px}
+.chip{font-size:22px;font-weight:800;letter-spacing:.5px;padding:9px 20px;border-radius:999px;
+  background:linear-gradient(135deg,rgba(143,227,255,.20),rgba(63,169,255,.12));
+  border:1.5px solid var(--line);color:var(--ice);white-space:nowrap}
+.chip.warn{background:linear-gradient(135deg,rgba(255,209,102,.24),rgba(255,140,66,.14));
+  border-color:rgba(255,209,102,.5);color:var(--gold)}
+.stitle{font-size:46px;font-weight:900;color:#fff;letter-spacing:-1px;line-height:1.15;
+  text-shadow:0 4px 26px rgba(63,169,255,.35)}
+.stitle .sub{font-size:29px;font-weight:700;color:var(--vapor);opacity:.75;margin-left:12px}
+.shead::after{content:'';flex:1;height:3px;border-radius:3px;
+  background:linear-gradient(90deg,var(--line),transparent)}
+
+.sbody{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;gap:18px;font-size:32px;color:#eaf6ff;line-height:1.5}
+.sbody.row{flex-direction:row;gap:30px;align-items:stretch}
+.col{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:16px}
+.col.w6{flex:1.35}
+.col.w4{flex:.8}
+.center{align-items:center;justify-content:center}
+
+.lead{font-size:37px;font-weight:800;color:#fff}
+.dash{position:relative;padding-left:30px}
+.dash+.dash{margin-top:6px}
+.dash::before{content:'';position:absolute;left:0;top:.62em;width:14px;height:14px;border-radius:4px;
+  background:linear-gradient(135deg,var(--ice),var(--water));box-shadow:0 0 12px rgba(143,227,255,.6)}
+.num{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;
+  width:42px;height:42px;border-radius:12px;font-size:24px;font-weight:900;color:#062033;
+  background:linear-gradient(135deg,var(--ice),var(--water));margin-right:12px}
+.num.g{background:linear-gradient(135deg,var(--gold),var(--heat));color:#3a1c00}
+.small{font-size:27px}
+.tiny{font-size:23px;opacity:.85}
+.hl{color:var(--gold);font-weight:800}
+.q{color:var(--mint);font-weight:800}
+.cH{color:var(--h2);font-weight:800}
+.cO{color:var(--o2);font-weight:800}
+.cN{color:var(--neg);font-weight:800}
+.cP{color:var(--pos);font-weight:800}
+
+.panel{background:linear-gradient(160deg,rgba(20,57,95,.55),rgba(10,30,54,.5));
+  border:1.5px solid var(--line);border-radius:22px;padding:22px 26px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 10px 34px rgba(0,0,0,.3)}
+.panel.tight{padding:14px 18px}
+.panel.glow{border-color:rgba(143,227,255,.5);box-shadow:0 0 40px rgba(63,169,255,.18),inset 0 1px 0 rgba(255,255,255,.08)}
+.panel.warn{background:linear-gradient(160deg,rgba(255,140,66,.16),rgba(60,26,6,.45));border-color:rgba(255,209,102,.45)}
+.panel.h2{background:linear-gradient(160deg,rgba(94,242,196,.16),rgba(8,40,32,.5));border-color:rgba(94,242,196,.42)}
+.panel.o2{background:linear-gradient(160deg,rgba(255,159,69,.16),rgba(48,24,6,.5));border-color:rgba(255,159,69,.42)}
+.panel.key{background:linear-gradient(160deg,rgba(255,92,120,.14),rgba(46,10,20,.45));border-color:rgba(255,92,120,.4)}
+
+/* ============ BLANK / ANSWER ============ */
+.bl{display:inline-block;position:relative;padding:2px 14px;margin:0 3px;border-radius:10px;
+  font-weight:800;color:transparent;
+  background:linear-gradient(180deg,rgba(255,255,255,.13),rgba(255,255,255,.07));
+  box-shadow:inset 0 0 0 2px rgba(143,227,255,.30);
+  transition:color .28s ease,background .35s ease,box-shadow .35s ease,transform .3s cubic-bezier(.2,1.6,.4,1)}
+.bl.on{color:var(--ans);background:rgba(255,92,120,.10);
+  box-shadow:inset 0 0 0 2px rgba(255,92,120,.35),0 0 22px rgba(255,92,120,.22);
+  animation:pop .42s cubic-bezier(.2,1.7,.4,1)}
+@keyframes pop{0%{transform:scale(.86)}60%{transform:scale(1.06)}100%{transform:scale(1)}}
+td .bl,th .bl{margin:0}
+
+.step{opacity:0;transform:translateY(14px);transition:opacity .4s ease,transform .45s cubic-bezier(.2,.8,.3,1)}
+.step.on{opacity:1;transform:none}
+.step.nofly{transform:none}
+
+/* ============ TABLE ============ */
+table.t{width:100%;border-collapse:separate;border-spacing:0;font-size:29px;
+  border:2px solid var(--line);border-radius:16px;overflow:hidden;background:rgba(8,26,46,.5)}
+table.t th{background:linear-gradient(180deg,rgba(63,169,255,.28),rgba(63,169,255,.14));
+  color:#fff;font-weight:800;padding:13px 12px;font-size:29px}
+table.t td{padding:12px 14px;text-align:center;border-top:1.5px solid rgba(143,227,255,.18);
+  border-left:1.5px solid rgba(143,227,255,.14);color:#eaf6ff}
+table.t td:first-child,table.t th:first-child{border-left:none}
+table.t td.lbl{background:rgba(143,227,255,.10);font-weight:800;color:var(--ice);font-size:27px}
+table.t td.left{text-align:left}
+table.t.sm{font-size:25px}
+table.t.sm td{padding:9px 10px}
+table.t.sm th{font-size:26px;padding:10px}
+
+/* ============ FIGURE / CANVAS ============ */
+.fig{position:relative;border-radius:20px;overflow:hidden;background:rgba(4,16,31,.55);
+  border:1.5px solid var(--line);box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
+.fig canvas,.fig svg{display:block;width:100%;height:100%}
+.figcap{position:absolute;left:0;right:0;bottom:0;padding:8px 16px;font-size:23px;font-weight:700;
+  color:var(--ice);background:linear-gradient(0deg,rgba(4,16,31,.9),transparent);text-align:center}
+.badge{position:absolute;top:12px;left:14px;font-size:24px;font-weight:800;color:#062033;
+  padding:5px 16px;border-radius:999px;background:linear-gradient(135deg,var(--ice),var(--water))}
+.badge.r{left:auto;right:14px;background:linear-gradient(135deg,#ffb0bf,var(--ans));color:#3a0512}
+.badge.heat{background:linear-gradient(135deg,#ffd166,var(--heat));color:#3a1c00}
+.badge.cool{background:linear-gradient(135deg,#bfe9ff,var(--cool));color:#04263a}
+
+/* ============ TITLE SLIDE ============ */
+.cover{align-items:center;justify-content:center;text-align:center;gap:0}
+.cover .big{font-size:100px;font-weight:900;color:#fff;letter-spacing:-3px;
+  text-shadow:0 10px 60px rgba(63,169,255,.5)}
+.cover .mid{font-size:50px;font-weight:800;margin-top:12px;
+  background:linear-gradient(90deg,var(--ice),var(--mint));-webkit-background-clip:text;background-clip:text;color:transparent}
+.cover .goal{margin-top:32px;font-size:30px;color:var(--vapor);max-width:1150px;line-height:1.6}
+.cover .hint{margin-top:36px;font-size:24px;color:var(--ice);opacity:.75}
+
+/* ============ QUIZ ============ */
+.qhead{display:flex;gap:16px;align-items:flex-start;font-size:34px;font-weight:800;color:#fff;line-height:1.4}
+.qno{flex:0 0 auto;width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;
+  font-size:28px;font-weight:900;color:#062033;background:linear-gradient(135deg,var(--mint),var(--ice));margin-top:2px}
+.qlist{display:flex;flex-direction:column;gap:11px;font-size:30px;margin-top:4px}
+.qitem{display:flex;gap:14px;align-items:flex-start;padding:11px 20px;border-radius:14px;
+  background:rgba(143,227,255,.07);border:1.5px solid rgba(143,227,255,.16);transition:all .35s ease}
+.qitem .mk{flex:0 0 auto;font-weight:800;color:var(--ice);min-width:34px}
+.qitem .ansbox{margin-left:auto;flex:0 0 auto;min-width:96px;text-align:center;font-weight:900;
+  color:transparent;background:rgba(255,255,255,.10);border-radius:10px;padding:0 12px;
+  box-shadow:inset 0 0 0 2px rgba(143,227,255,.28);transition:all .3s ease}
+.qitem.on .ansbox{color:var(--ans);background:rgba(255,92,120,.12);box-shadow:inset 0 0 0 2px rgba(255,92,120,.4)}
+.qitem.ans{opacity:1;transform:none}
+.qitem.ans.on{background:rgba(255,92,120,.14);border-color:rgba(255,92,120,.55);
+  box-shadow:0 0 30px rgba(255,92,120,.18);transform:translateX(6px)}
+.qitem.ans.on .mk,.qitem.ans.on .txt{color:var(--ans);font-weight:800}
+.qitem .txt{flex:1}
+.qnote{font-size:26px;color:var(--gold);font-weight:700;padding:12px 20px;border-radius:14px;
+  background:rgba(255,209,102,.10);border:1.5px solid rgba(255,209,102,.3)}
+.slide.dense .qlist{font-size:26px;gap:9px}
+.slide.dense .qitem{padding:7px 16px}
+.slide.dense table.t.sm{font-size:23px}
+.slide.dense .sbody{font-size:28px;gap:14px}
+.qbox{font-size:29px;padding:16px 22px;border-radius:14px;background:rgba(8,26,46,.6);
+  border:1.5px dashed rgba(143,227,255,.4);line-height:1.6}
+
+/* ============ HUD / NAV ============ */
+#hud{position:absolute;left:0;right:0;bottom:0;height:46px;z-index:9;display:flex;align-items:center;
+  gap:14px;padding:0 22px;font-size:20px;color:rgba(219,238,255,.55);
+  background:linear-gradient(0deg,rgba(4,16,31,.85),transparent)}
+#prog{flex:1;height:6px;border-radius:6px;background:rgba(255,255,255,.10);overflow:hidden}
+#progbar{height:100%;width:0;border-radius:6px;background:linear-gradient(90deg,var(--ice),var(--mint));transition:width .35s ease}
+#hud b{color:var(--ice)}
+.navbtn{pointer-events:auto;cursor:pointer;padding:3px 12px;border-radius:9px;border:1.5px solid var(--line);
+  background:rgba(143,227,255,.10);color:var(--vapor);font-size:19px;font-weight:700}
+.navbtn:hover{background:rgba(143,227,255,.24)}
+#toc{position:absolute;inset:0;z-index:20;display:none;background:rgba(4,12,24,.96);padding:44px 54px;overflow:auto}
+#toc.show{display:block}
+#toc h3{font-size:36px;color:#fff;margin-bottom:18px}
+.tocgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:11px}
+.tocitem{padding:9px 13px;border-radius:12px;background:rgba(143,227,255,.08);border:1.5px solid var(--line);
+  color:var(--vapor);font-size:19px;cursor:pointer;line-height:1.3}
+.tocitem:hover{background:rgba(143,227,255,.25);color:#fff}
+.tocitem.ch{grid-column:1/-1;background:linear-gradient(90deg,rgba(63,169,255,.3),transparent);
+  font-size:25px;font-weight:900;color:var(--ice);border:none;margin-top:6px}
+#toast{position:absolute;top:24px;left:50%;transform:translateX(-50%);z-index:30;padding:10px 26px;
+  border-radius:999px;background:rgba(4,16,31,.9);border:1.5px solid var(--line);color:var(--ice);
+  font-size:22px;font-weight:700;opacity:0;transition:opacity .3s;pointer-events:none}
+#toast.show{opacity:1}
+
+/* ============ MISC ============ */
+.pulse{animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:.55}50%{opacity:1}}
+.arrowR{font-size:40px;color:var(--ice)}
+.eqrow{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.tag{display:inline-block;padding:5px 16px;border-radius:12px;font-size:26px;font-weight:800}
+.tag.h2{background:rgba(94,242,196,.18);color:#a6f5dd;box-shadow:inset 0 0 0 2px rgba(94,242,196,.45)}
+.tag.o2{background:rgba(255,159,69,.18);color:#ffd6a8;box-shadow:inset 0 0 0 2px rgba(255,159,69,.45)}
+.tag.neg{background:rgba(94,200,255,.18);color:#bfe9ff;box-shadow:inset 0 0 0 2px rgba(94,200,255,.5)}
+.tag.pos{background:rgba(255,107,107,.18);color:#ffc9c9;box-shadow:inset 0 0 0 2px rgba(255,107,107,.5)}
+.tag.solid{background:rgba(255,140,66,.18);color:#ffc79a;box-shadow:inset 0 0 0 2px rgba(255,140,66,.4)}
+.tag.liquid{background:rgba(63,169,255,.18);color:#a9d9ff;box-shadow:inset 0 0 0 2px rgba(63,169,255,.45)}
+.tag.gas{background:rgba(94,242,196,.16);color:#a6f5dd;box-shadow:inset 0 0 0 2px rgba(94,242,196,.4)}
+</style>
+</head>
+<body>
+<div id="stage">
+  <canvas id="bgfx"></canvas>
+  <div id="bgGlow"></div>
+  <div id="deck"></div>
+  <div id="hud">
+    <span class="navbtn" id="btnPrev">◀ 이전</span>
+    <span class="navbtn" id="btnNext">다음 ▶</span>
+    <span class="navbtn" id="btnToc">목차</span>
+    <span class="navbtn" id="btnReset">되돌리기</span>
+    <div id="prog"><div id="progbar"></div></div>
+    <span><b id="pgNow">1</b> / <span id="pgAll">1</span></span>
+  </div>
+  <div id="toc"><h3>목차 — 클릭하면 이동합니다</h3><div class="tocgrid" id="tocgrid"></div></div>
+  <div id="toast"></div>
+</div>
+
+<script>
+/* =====================================================================
+   물질의 상태 변화 · 수업용 슬라이드 엔진
+   ===================================================================== */
+const deckEl = document.getElementById('deck');
+const SLIDES = [];
+const ANIMS  = {};
+
+/* ---------- 공통 드로잉 헬퍼 ---------- */
+const TAU = Math.PI*2;
+function rr(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
+function ball(ctx,x,y,r,c,hi){
+  const g=ctx.createRadialGradient(x-r*.35,y-r*.4,r*.1,x,y,r);
+  g.addColorStop(0,hi||'rgba(255,255,255,.95)');g.addColorStop(.45,c);g.addColorStop(1,shade(c,-38));
+  ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,r,0,TAU);ctx.fill();
+}
+function glowBall(ctx,x,y,r,c,a){
+  ctx.save();ctx.globalAlpha=a==null?1:a;ctx.shadowColor=c;ctx.shadowBlur=r*2.2;ball(ctx,x,y,r,c);ctx.restore();
+}
+function shade(hex,p){
+  const n=parseInt(hex.slice(1),16);let r=(n>>16)&255,g=(n>>8)&255,b=n&255;
+  r=Math.max(0,Math.min(255,r+p));g=Math.max(0,Math.min(255,g+p));b=Math.max(0,Math.min(255,b+p));
+  return `rgb(${r},${g},${b})`;
+}
+function txt(ctx,s,x,y,size,color,align,weight){
+  ctx.save();ctx.font=`${weight||800} ${size}px Pretendard,sans-serif`;ctx.fillStyle=color;
+  ctx.textAlign=align||'center';ctx.textBaseline='middle';ctx.fillText(s,x,y);ctx.restore();
+}
+function arrow(ctx,x1,y1,x2,y2,c,w,head){
+  const a=Math.atan2(y2-y1,x2-x1),hl=head||12;
+  ctx.save();ctx.strokeStyle=c;ctx.fillStyle=c;ctx.lineWidth=w||3;ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2-Math.cos(a)*hl*.8,y2-Math.sin(a)*hl*.8);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(x2,y2);
+  ctx.lineTo(x2-Math.cos(a-.42)*hl,y2-Math.sin(a-.42)*hl);
+  ctx.lineTo(x2-Math.cos(a+.42)*hl,y2-Math.sin(a+.42)*hl);
+  ctx.closePath();ctx.fill();ctx.restore();
+}
+function curveArrow(ctx,x1,y1,cx,cy,x2,y2,c,w,hl){
+  ctx.save();ctx.strokeStyle=c;ctx.lineWidth=w||4;ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(x1,y1);ctx.quadraticCurveTo(cx,cy,x2,y2);ctx.stroke();
+  const a=Math.atan2(y2-cy,x2-cx),h=hl||14;ctx.fillStyle=c;
+  ctx.beginPath();ctx.moveTo(x2,y2);
+  ctx.lineTo(x2-Math.cos(a-.42)*h,y2-Math.sin(a-.42)*h);
+  ctx.lineTo(x2-Math.cos(a+.42)*h,y2-Math.sin(a+.42)*h);ctx.closePath();ctx.fill();ctx.restore();
+}
+function beaker(ctx,x,y,w,h,lw){
+  ctx.save();ctx.strokeStyle='rgba(190,225,255,.85)';ctx.lineWidth=lw||4;ctx.lineJoin='round';
+  ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x,y+h);ctx.lineTo(x+w,y+h);ctx.lineTo(x+w,y);ctx.stroke();
+  ctx.strokeStyle='rgba(190,225,255,.35)';ctx.lineWidth=2;
+  for(let i=1;i<4;i++){ctx.beginPath();ctx.moveTo(x+2,y+h-h*i/4);ctx.lineTo(x+22,y+h-h*i/4);ctx.stroke();}
+  ctx.restore();
+}
+function clear(o,bg){
+  const {ctx,W,H}=o;ctx.clearRect(0,0,W,H);
+  if(bg!==false){const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'rgba(12,36,62,.55)');g.addColorStop(1,'rgba(5,18,34,.65)');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);}
+}
+function ease(t){return t<0?0:t>1?1:t*t*(3-2*t);}
+function clamp(v,a,b){return v<a?a:v>b?b:v;}
+function rand(a,b){return a+Math.random()*(b-a);}
+
+
+function bowArrow(ctx,x1,y1,x2,y2,R,bow,color,lw,hl){
+  const dx=x2-x1,dy=y2-y1,len=Math.hypot(dx,dy)||1;
+  const ux=dx/len,uy=dy/len,nx=-uy,ny=ux;
+  const sx=x1+ux*R,sy=y1+uy*R,ex=x2-ux*R,ey=y2-uy*R;
+  const mx=(sx+ex)/2+nx*bow,my=(sy+ey)/2+ny*bow;
+  curveArrow(ctx,sx,sy,mx,my,ex,ey,color,lw||4,hl||13);
+  return [0.25*sx+0.5*mx+0.25*ex, 0.25*sy+0.5*my+0.25*ey];
+}
+function chipTxt(ctx,s,x,y,size,color,bg,bw){
+  const w=bw||(s.length*size*0.62+26),h=size*1.5;
+  ctx.save();rr(ctx,x-w/2,y-h/2,w,h,10);ctx.fillStyle=bg||'rgba(6,20,38,.92)';ctx.fill();
+  ctx.strokeStyle=color;ctx.lineWidth=2;ctx.stroke();ctx.restore();
+  txt(ctx,s,x,y,size,color);
+}
+
+/* ---------- 애니메이션 컨트롤러 ---------- */
+let liveAnims=[];
+function mkAnim(cv,name){
+  const ctx=cv.getContext('2d');
+  const w=Math.round(cv.clientWidth),h=Math.round(cv.clientHeight);
+  if(!w||!h) return null;
+  cv.width=w*2;cv.height=h*2;ctx.setTransform(2,0,0,2,0,0);
+  const o={cv,ctx,W:w,H:h,t:0,pt:0,phase:0,stopped:false,d:{},name};
+  o.setPhase=function(k){if(k===o.phase)return;o.phase=k;o.pt=o.t;if(o.onPhase)o.onPhase(k);};
+  o.frame=function(){};
+  if(ANIMS[name]) ANIMS[name](o);
+  const t0=performance.now();
+  (function loop(now){if(o.stopped)return;o.t=(now-t0)/1000;try{o.frame(o);}catch(e){console.error(name,e);o.stopped=true;}requestAnimationFrame(loop);})(performance.now());
+  liveAnims.push(o);
+  return o;
+}
+function stopAnims(){liveAnims.forEach(a=>a.stopped=true);liveAnims=[];}
+
+/* ---------- 슬라이드 빌드 ---------- */
+function buildDeck(){
+  SLIDES.forEach((def,i)=>{
+    const el=document.createElement('section');
+    el.className='slide '+(def.cls||'');
+    el.dataset.i=i;
+    if(def.cover){
+      el.innerHTML=`<div class="sbody cover">${def.body}</div>`;
+    }else{
+      el.innerHTML=`<div class="shead"><span class="chip">${def.chip||''}</span>
+        <div class="stitle">${def.title||''}${def.sub?`<span class="sub">${def.sub}</span>`:''}</div></div>
+        <div class="sbody ${def.rows?'row':''}">${def.body}</div>`;
+    }
+    deckEl.appendChild(el);
+    // 단계 부여
+    let s=0;
+    el.querySelectorAll('.bl,.step').forEach(it=>{
+      if(it.classList.contains('wp')&&s>0){it.dataset.s=s;}
+      else{s++;it.dataset.s=s;}
+    });
+    def._max=Math.max(s,def.extra||0);
+    def._el=el;
+  });
+  document.getElementById('pgAll').textContent=SLIDES.length;
+  buildToc();
+}
+function buildToc(){
+  const g=document.getElementById('tocgrid');let lastCh=null;
+  SLIDES.forEach((d,i)=>{
+    if(d.ch!==lastCh){lastCh=d.ch;const h=document.createElement('div');h.className='tocitem ch';h.textContent=d.chName||('제 '+d.ch+' 부');g.appendChild(h);}
+    const it=document.createElement('div');it.className='tocitem';
+    it.textContent=(i+1)+'. '+(d.tocName||d.title||'표지').replace(/<[^>]+>/g,'');
+    it.onclick=(e)=>{e.stopPropagation();go(i,0);document.getElementById('toc').classList.remove('show');};
+    g.appendChild(it);
+  });
+}
+
+/* ---------- 진행 ---------- */
+let cur=0,step=0;
+function render(){
+  const def=SLIDES[cur],el=def._el;
+  el.querySelectorAll('.bl,.step').forEach(it=>{
+    it.classList.toggle('on',+it.dataset.s<=step);
+  });
+  if(def.step) try{def.step(step,el);}catch(e){console.error(e);}
+  document.getElementById('pgNow').textContent=cur+1;
+  document.getElementById('progbar').style.width=((cur+ (def._max?step/def._max:1))/SLIDES.length*100)+'%';
+}
+function go(i,st){
+  if(i<0||i>=SLIDES.length)return;
+  stopAnims();
+  SLIDES.forEach(d=>d._el.classList.remove('active'));
+  cur=i;step=st==null?0:st;
+  const def=SLIDES[cur],el=def._el;
+  el.classList.add('active');
+  el._a={};
+  requestAnimationFrame(()=>{
+    el.querySelectorAll('canvas[data-a]').forEach(cv=>{
+      const a=mkAnim(cv,cv.dataset.a);if(a)el._a[cv.dataset.a]=a;
+    });
+    if(def.enter) try{def.enter(el);}catch(e){console.error(e);}
+    render();
+  });
+  render();
+}
+function next(){
+  const def=SLIDES[cur];
+  if(step<def._max){step++;render();}
+  else if(cur<SLIDES.length-1) go(cur+1,0);
+}
+function prev(){
+  if(step>0){step--;render();}
+  else if(cur>0){go(cur-1,SLIDES[cur-1]._max);}
+}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),1400);}
+
+document.addEventListener('click',e=>{
+  if(e.target.closest('#hud')||e.target.closest('#toc'))return;
+  if(document.getElementById('toc').classList.contains('show')){document.getElementById('toc').classList.remove('show');return;}
+  next();
+});
+document.addEventListener('contextmenu',e=>{e.preventDefault();prev();});
+document.addEventListener('keydown',e=>{
+  const k=e.key;
+  if(k===' '||k==='ArrowRight'||k==='ArrowDown'||k==='PageDown'||k==='Enter'){e.preventDefault();next();}
+  else if(k==='ArrowLeft'||k==='ArrowUp'||k==='PageUp'||k==='Backspace'){e.preventDefault();prev();}
+  else if(k==='Home'){go(0,0);}
+  else if(k==='End'){go(SLIDES.length-1,0);}
+  else if(k==='r'||k==='R'){go(cur,0);toast('이 슬라이드를 처음부터');}
+  else if(k==='a'||k==='A'){step=SLIDES[cur]._max;render();toast('정답 모두 보기');}
+  else if(k==='t'||k==='T'||k==='Escape'){document.getElementById('toc').classList.toggle('show');}
+  else if(k==='f'||k==='F'){if(!document.fullscreenElement)document.documentElement.requestFullscreen();else document.exitFullscreen();}
+});
+document.getElementById('btnNext').onclick=e=>{e.stopPropagation();next();};
+document.getElementById('btnPrev').onclick=e=>{e.stopPropagation();prev();};
+document.getElementById('btnToc').onclick=e=>{e.stopPropagation();document.getElementById('toc').classList.toggle('show');};
+document.getElementById('btnReset').onclick=e=>{e.stopPropagation();go(cur,0);};
+
+/* ---------- 스테이지 스케일 ---------- */
+function fit(){
+  const s=Math.min(window.innerWidth/1600,window.innerHeight/900);
+  document.getElementById('stage').style.transform=`scale(${s})`;
+}
+window.addEventListener('resize',()=>{fit();go(cur,step);});
+
+/* ---------- 배경 입자 ---------- */
+(function(){
+  const cv=document.getElementById('bgfx'),ctx=cv.getContext('2d');
+  cv.width=1600;cv.height=900;
+  const P=[...Array(46)].map(()=>({x:rand(0,1600),y:rand(0,900),r:rand(1.5,4.5),vx:rand(-.25,.25),vy:rand(-.3,.1),a:rand(.15,.5)}));
+  (function loop(){
+    ctx.clearRect(0,0,1600,900);
+    P.forEach(p=>{p.x+=p.vx;p.y+=p.vy;if(p.y<-10)p.y=910;if(p.x<-10)p.x=1610;if(p.x>1610)p.x=-10;
+      ctx.globalAlpha=p.a;ball(ctx,p.x,p.y,p.r,'#8fe3ff');});
+    ctx.globalAlpha=1;requestAnimationFrame(loop);
+  })();
+})();
+</script>
+
+<script>
+/* =====================================================================
+   물의 분해(전기 분해) 단원 — 공통 드로잉 라이브러리
+   ===================================================================== */
+function S(def){SLIDES.push(def);}
+const A=(n,h)=>`<div class="fig" style="height:${h}px"><canvas data-a="${n}"></canvas></div>`;
+const AC=(n,h,cap)=>`<div class="fig" style="height:${h}px"><canvas data-a="${n}"></canvas><div class="figcap">${cap}</div></div>`;
+
+const C_H2='#5ef2c4', C_O2='#ff9f45', C_NEG='#5ec8ff', C_POS='#ff6b6b';
+const C_SOL='#3fa9ff', C_GLASS='rgba(198,231,255,.85)';
+
+/* 한글 폭을 실제 측정해서 칩 배경 크기를 맞춘다 (엔진 기본 구현을 덮어씀) */
+function chipTxt(ctx,s,x,y,size,color,bg,bw){
+  ctx.save();ctx.font=`800 ${size}px Pretendard,'Malgun Gothic',sans-serif`;
+  const tw=ctx.measureText(s).width;ctx.restore();
+  const w=bw||(tw+30), h=size*1.66;
+  ctx.save();rr(ctx,x-w/2,y-h/2,w,h,10);ctx.fillStyle=bg||'rgba(6,20,38,.94)';ctx.fill();
+  ctx.strokeStyle=color;ctx.lineWidth=2;ctx.stroke();ctx.restore();
+  txt(ctx,s,x,y,size,color);
+  return w;
+}
+
+/* ---------- 작은 유틸 ---------- */
+function seeded(n,seed){const a=[];let s=seed||1;for(let i=0;i<n;i++){s=(s*9301+49297)%233280;a.push(s/233280);}return a;}
+function lerp(a,b,t){return a+(b-a)*t;}
+function ph(o,k){return Math.max(0,o.t-(o.phase>=k?o.pt:1e9));} // 해당 단계 시작 후 경과(초)
+
+/* ---------- 전기 분해 장치 ---------- */
+function cellGeom(X,Y,W,H){
+  const tubeW=66, stick=150;
+  const tankTop=Y+stick, tankBot=Y+H;
+  return {X,Y,W,H,tubeW,tankTop,tankBot,tankL:X,tankR:X+W,
+          c1:X+W*0.28, c2:X+W*0.72, tubeTop:Y, tubeBot:Y+H-30,
+          solTop:Y+stick+16};
+}
+function tubePath(ctx,g,cx){
+  const hw=g.tubeW/2,r=hw;
+  ctx.beginPath();
+  ctx.moveTo(cx-hw,g.tubeBot);
+  ctx.lineTo(cx-hw,g.tubeTop+r);
+  ctx.arcTo(cx-hw,g.tubeTop,cx,g.tubeTop,r);
+  ctx.arcTo(cx+hw,g.tubeTop,cx+hw,g.tubeTop+r,r);
+  ctx.lineTo(cx+hw,g.tubeBot);
+  ctx.closePath();
+}
+/* opt: {sol, gasL, gasR, bubL, bubR, t, ionsL, ionsR, glowNeg, glowPos, hideElec} */
+function drawCell(ctx,g,opt){
+  const o=opt||{}, t=o.t||0;
+  const solOn=o.sol!==false;
+  /* --- 수조 --- */
+  ctx.save();
+  rr(ctx,g.tankL,g.tankTop,g.W,g.tankBot-g.tankTop,16);
+  ctx.fillStyle='rgba(10,34,60,.55)';ctx.fill();
+  ctx.restore();
+  if(solOn){
+    ctx.save();
+    rr(ctx,g.tankL+3,g.solTop,g.W-6,g.tankBot-g.solTop-3,13);ctx.clip();
+    const gr=ctx.createLinearGradient(0,g.solTop,0,g.tankBot);
+    gr.addColorStop(0,'rgba(63,169,255,.38)');gr.addColorStop(1,'rgba(28,110,190,.55)');
+    ctx.fillStyle=gr;ctx.fillRect(g.tankL,g.solTop,g.W,g.tankBot-g.solTop);
+    /* 수면 물결 */
+    ctx.strokeStyle='rgba(190,235,255,.55)';ctx.lineWidth=2.5;ctx.beginPath();
+    for(let x=g.tankL;x<=g.tankR;x+=6){ctx.lineTo(x,g.solTop+Math.sin(x*.05+t*2)*2.2);}
+    ctx.stroke();ctx.restore();
+  }
+  /* --- 두 관 --- */
+  [[g.c1,o.gasL||0,C_H2,o.bubL||0,C_NEG],[g.c2,o.gasR||0,C_O2,o.bubR||0,C_POS]].forEach(([cx,gas,gc,bub,ec],idx)=>{
+    const inTop=g.tubeTop+4, inBot=g.tubeBot-2, inH=inBot-inTop;
+    const gasY=inTop+gas*inH;
+    ctx.save();tubePath(ctx,g,cx);ctx.clip();
+    /* 관 속 용액 */
+    if(solOn){
+      const gr=ctx.createLinearGradient(0,gasY,0,inBot);
+      gr.addColorStop(0,'rgba(90,190,255,.45)');gr.addColorStop(1,'rgba(28,110,190,.6)');
+      ctx.fillStyle=gr;ctx.fillRect(cx-40,gasY,80,inBot-gasY);
+    }
+    /* 모인 기체 */
+    if(gas>0.005){
+      ctx.fillStyle=hexA(gc,.32);
+      ctx.fillRect(cx-40,inTop-10,80,gasY-inTop+10);
+      ctx.strokeStyle=hexA(gc,.9);ctx.lineWidth=3;
+      ctx.beginPath();ctx.moveTo(cx-34,gasY);ctx.lineTo(cx+34,gasY);ctx.stroke();
+    }
+    /* 기포 */
+    if(bub>0&&solOn){
+      const n=Math.round(9*bub)+3, sd=seeded(n*2,idx===0?7:29);
+      for(let i=0;i<n;i++){
+        const sp=lerp(38,72,sd[i]), off=lerp(-22,22,sd[i+n]);
+        const yy=inBot-(((t*sp+sd[i]*400)%(inBot-gasY+30)));
+        if(yy>gasY-4&&yy<inBot){
+          ctx.globalAlpha=.85;
+          ball(ctx,cx+off,yy,lerp(3.4,6.4,sd[i]),'#dff3ff');
+          ctx.globalAlpha=1;
+        }
+      }
+    }
+    ctx.restore();
+    /* 관 유리 */
+    ctx.save();tubePath(ctx,g,cx);
+    ctx.strokeStyle=C_GLASS;ctx.lineWidth=3.5;ctx.stroke();ctx.restore();
+    /* 고무마개 */
+    ctx.save();rr(ctx,cx-g.tubeW/2-3,g.tubeTop-16,g.tubeW+6,20,6);
+    ctx.fillStyle='#2b3b4d';ctx.fill();ctx.strokeStyle='rgba(180,210,240,.5)';ctx.lineWidth=2;ctx.stroke();ctx.restore();
+  });
+  /* --- 전극 --- */
+  if(!o.hideElec){
+    [[g.c1,C_NEG,o.glowNeg],[g.c2,C_POS,o.glowPos]].forEach(([cx,c,gl])=>{
+      const eTop=g.tankTop+40, eBot=g.tankBot-22;
+      ctx.save();
+      if(gl){ctx.shadowColor=c;ctx.shadowBlur=22;}
+      rr(ctx,cx-7,eTop,14,eBot-eTop,6);
+      const gr=ctx.createLinearGradient(cx-7,0,cx+7,0);
+      gr.addColorStop(0,shade(c,-70));gr.addColorStop(.4,c);gr.addColorStop(1,shade(c,-50));
+      ctx.fillStyle=gr;ctx.fill();ctx.restore();
+    });
+  }
+}
+function hexA(hex,a){
+  const n=parseInt(hex.slice(1),16);
+  return `rgba(${(n>>16)&255},${(n>>8)&255},${n&255},${a})`;
+}
+/* 전극 → 전원장치 전선 */
+function drawWires(ctx,g,psu,on,t){
+  const yA=g.tankBot-14;
+  [[g.c1,C_NEG,psu.nx,psu.ny],[g.c2,C_POS,psu.px,psu.py]].forEach(([cx,c,tx,ty],i)=>{
+    ctx.save();ctx.strokeStyle=c;ctx.lineWidth=5;ctx.lineCap='round';ctx.lineJoin='round';
+    const outX=i===0?g.tankL-34:g.tankR+34;
+    ctx.beginPath();
+    ctx.moveTo(cx,g.tankBot-24);
+    ctx.lineTo(cx,yA+16);
+    ctx.lineTo(outX,yA+16);
+    ctx.quadraticCurveTo(outX+(i===0?-26:26),(yA+ty)/2,tx,ty);
+    ctx.stroke();
+    if(on){ /* 전류 흐름 점 */
+      ctx.fillStyle='#fff8c9';
+      for(let k=0;k<3;k++){
+        const u=((t*.55+k/3)%1);
+        const px=lerp(cx,outX,Math.min(1,u*2)), py=lerp(yA+16,ty,Math.max(0,u*2-1));
+        ctx.globalAlpha=.9;ctx.beginPath();ctx.arc(u<0.5?px:lerp(outX,tx,u*2-1),u<0.5?yA+16:py,4.5,0,TAU);ctx.fill();
+      }
+      ctx.globalAlpha=1;
+    }
+    ctx.restore();
+  });
+}
+/* ---------- 전원 장치 ---------- */
+function drawPSU(ctx,x,y,w,h,on,t){
+  ctx.save();
+  rr(ctx,x,y,w,h,12);
+  const gr=ctx.createLinearGradient(0,y,0,y+h);
+  gr.addColorStop(0,'#e8eef4');gr.addColorStop(1,'#b9c6d2');
+  ctx.fillStyle=gr;ctx.fill();ctx.strokeStyle='rgba(255,255,255,.7)';ctx.lineWidth=2;ctx.stroke();
+  /* 디스플레이 */
+  rr(ctx,x+12,y+12,w*.44,h*.30,7);ctx.fillStyle='#11202c';ctx.fill();
+  txt(ctx,on?'6.0':'0.0',x+12+w*.22,y+12+h*.15,Math.round(h*.20),on?'#ff6b6b':'#5a6b78');
+  rr(ctx,x+w*.50,y+12,w*.38,h*.30,7);ctx.fillStyle='#11202c';ctx.fill();
+  txt(ctx,on?'1.2':'0.0',x+w*.69,y+12+h*.15,Math.round(h*.20),on?'#ff6b6b':'#5a6b78');
+  /* 스위치 */
+  rr(ctx,x+12,y+h*.52,w*.26,h*.26,8);
+  ctx.fillStyle=on?'#4ade80':'#7b8b98';ctx.fill();
+  txt(ctx,on?'ON':'OFF',x+12+w*.13,y+h*.65,Math.round(h*.17),'#0d1b26');
+  /* 단자 */
+  const ny=y+h*.66, py=y+h*.66;
+  ball(ctx,x+w*.60,ny,9,'#2b6cb0');txt(ctx,'−',x+w*.60,ny-22,22,'#1c2a36');
+  ball(ctx,x+w*.82,py,9,'#e53e3e');txt(ctx,'+',x+w*.82,py-22,22,'#1c2a36');
+  if(on){ctx.globalAlpha=.35+.25*Math.sin(t*5);glowBall(ctx,x+w*.82,py,11,'#e53e3e');ctx.globalAlpha=1;}
+  ctx.restore();
+  return {nx:x+w*.60,ny:ny,px:x+w*.82,py:py};
+}
+/* ---------- 주사기 ---------- */
+/* dir: 1=노즐이 오른쪽, -1=노즐이 왼쪽. p: 피스톤 위치 0(비어있음)~1(가득) */
+function drawSyringe(ctx,x,y,L,Hh,dir,p,gasColor,label){
+  ctx.save();ctx.translate(x,y);ctx.scale(dir,1);
+  const bw=L*.72,bh=Hh;
+  /* 배럴 */
+  rr(ctx,0,-bh/2,bw,bh,8);ctx.fillStyle='rgba(220,240,255,.14)';ctx.fill();
+  /* 기체는 피스톤과 노즐 사이(앞쪽)에 들어 있다 */
+  const px=2+(bw-4)*(1-p);
+  if(p>0.01){
+    ctx.save();rr(ctx,2,-bh/2+2,bw-4,bh-4,7);ctx.clip();
+    ctx.fillStyle=hexA(gasColor,.44);ctx.fillRect(px,-bh/2,bw-2-px,bh);
+    ctx.restore();
+  }
+  rr(ctx,0,-bh/2,bw,bh,8);ctx.strokeStyle=C_GLASS;ctx.lineWidth=3;ctx.stroke();
+  /* 눈금 */
+  ctx.strokeStyle='rgba(200,230,255,.45)';ctx.lineWidth=2;
+  for(let i=1;i<5;i++){ctx.beginPath();ctx.moveTo(bw*i/5,-bh/2+3);ctx.lineTo(bw*i/5,-bh/2+13);ctx.stroke();}
+  /* 피스톤 */
+  rr(ctx,px-7,-bh/2+2,12,bh-4,3);ctx.fillStyle='#8fb6d8';ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,.6)';ctx.lineWidth=1.5;ctx.stroke();
+  /* 손잡이 막대 */
+  ctx.fillStyle='#8fb6d8';ctx.fillRect(-L*.26,-5,L*.26+px-4,10);
+  rr(ctx,-L*.30,-bh*.52,12,bh*1.04,5);ctx.fillStyle='#a8c8e4';ctx.fill();
+  /* 노즐 */
+  ctx.fillStyle='#cfe6ff';
+  ctx.beginPath();ctx.moveTo(bw,-bh*.20);ctx.lineTo(bw+L*.10,-4);ctx.lineTo(bw+L*.26,-4);
+  ctx.lineTo(bw+L*.26,4);ctx.lineTo(bw+L*.10,4);ctx.lineTo(bw,bh*.20);ctx.closePath();ctx.fill();
+  ctx.restore();
+  if(label) chipTxt(ctx,label,x+dir*L*.30,y-Hh*.72,24,gasColor);
+  return {tipX:x+dir*(L*.72+L*.26), tipY:y};
+}
+/* ---------- 불꽃 ---------- */
+function drawFlame(ctx,x,y,s,t,alpha){
+  ctx.save();ctx.globalAlpha=alpha==null?1:alpha;
+  const f=1+Math.sin(t*13)*.10, f2=1+Math.cos(t*9.3)*.08;
+  ctx.shadowColor='rgba(255,170,60,.9)';ctx.shadowBlur=s*1.7;
+  const g1=ctx.createRadialGradient(x,y-s*.45,s*.08,x,y-s*.35,s*1.05);
+  g1.addColorStop(0,'#fff6cf');g1.addColorStop(.35,'#ffcc4d');g1.addColorStop(.75,'#ff8a2b');g1.addColorStop(1,'rgba(255,90,20,0)');
+  ctx.fillStyle=g1;
+  ctx.beginPath();
+  ctx.moveTo(x,y-s*1.5*f);
+  ctx.bezierCurveTo(x+s*.78*f2,y-s*.75,x+s*.62,y+s*.15,x,y+s*.28);
+  ctx.bezierCurveTo(x-s*.62,y+s*.15,x-s*.78*f2,y-s*.75,x,y-s*1.5*f);
+  ctx.closePath();ctx.fill();
+  ctx.shadowBlur=0;
+  const g2=ctx.createRadialGradient(x,y-s*.15,s*.05,x,y-s*.15,s*.5);
+  g2.addColorStop(0,'#ffffff');g2.addColorStop(.6,'#9fd8ff');g2.addColorStop(1,'rgba(120,190,255,0)');
+  ctx.fillStyle=g2;ctx.beginPath();ctx.ellipse(x,y-s*.12,s*.26,s*.44,0,0,TAU);ctx.fill();
+  ctx.restore();
+}
+/* 점화기(라이터) */
+function drawLighter(ctx,x,y,dir,t,flameOn){
+  ctx.save();ctx.translate(x,y);ctx.scale(dir,1);
+  rr(ctx,0,-16,124,32,10);ctx.fillStyle='#f0c419';ctx.fill();
+  ctx.strokeStyle='rgba(0,0,0,.25)';ctx.lineWidth=2;ctx.stroke();
+  rr(ctx,-30,-9,32,18,5);ctx.fillStyle='#8a939c';ctx.fill();
+  ctx.restore();
+  if(flameOn) drawFlame(ctx,x-dir*46,y-6,22,t,1);
+  return {tipX:x-dir*46,tipY:y-6};
+}
+/* 향(꺼져 가는 불씨 / 다시 타오름) */
+function drawIncense(ctx,x,y,dir,t,mode){ // mode: 'ember' | 'flare'
+  ctx.save();ctx.translate(x,y);ctx.scale(dir,1);
+  ctx.strokeStyle='#a06a3a';ctx.lineWidth=9;ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(150,0);ctx.stroke();
+  ctx.restore();
+  const tx=x-dir*4;
+  if(mode==='flare'){
+    drawFlame(ctx,tx,y-4,26,t,1);
+    for(let i=0;i<7;i++){const a=(t*3+i)%1;ctx.globalAlpha=(1-a)*.8;
+      ball(ctx,tx-dir*a*30,y-a*46+Math.sin(i*2+t*4)*8,3.2,'#ffd166');}
+    ctx.globalAlpha=1;
+  }else{
+    ctx.save();ctx.globalAlpha=.55+.35*Math.sin(t*4);
+    glowBall(ctx,tx,y,8.5,'#ff7a3d');ctx.restore();
+    ctx.save();ctx.strokeStyle='rgba(210,225,240,.42)';ctx.lineWidth=3.5;ctx.lineCap='round';
+    ctx.beginPath();ctx.moveTo(tx,y-8);
+    for(let i=1;i<=5;i++){ctx.lineTo(tx+Math.sin(t*1.8+i*.9)*13*i*.32,y-8-i*17);}
+    ctx.stroke();ctx.restore();
+  }
+  return {tipX:tx,tipY:y};
+}
+/* ---------- 분자 모형 ---------- */
+const R_O=21, R_H=13;
+function molH2O(ctx,x,y,ang,sc){
+  sc=sc||1;const a=ang||0;
+  const hx1=x+Math.cos(a-0.92)*R_O*1.55*sc, hy1=y+Math.sin(a-0.92)*R_O*1.55*sc;
+  const hx2=x+Math.cos(a+0.92)*R_O*1.55*sc, hy2=y+Math.sin(a+0.92)*R_O*1.55*sc;
+  ctx.save();ctx.strokeStyle='rgba(255,255,255,.45)';ctx.lineWidth=6*sc;
+  ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(hx1,hy1);ctx.moveTo(x,y);ctx.lineTo(hx2,hy2);ctx.stroke();ctx.restore();
+  ball(ctx,hx1,hy1,R_H*sc,'#eaf6ff');ball(ctx,hx2,hy2,R_H*sc,'#eaf6ff');
+  ball(ctx,x,y,R_O*sc,C_O2);
+  txt(ctx,'O',x,y,17*sc,'#4a1e00');
+}
+function molH2(ctx,x,y,ang,sc){
+  sc=sc||1;const a=ang||0,d=R_H*1.35*sc;
+  const x1=x-Math.cos(a)*d,y1=y-Math.sin(a)*d,x2=x+Math.cos(a)*d,y2=y+Math.sin(a)*d;
+  ctx.save();ctx.strokeStyle='rgba(255,255,255,.5)';ctx.lineWidth=6*sc;
+  ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();ctx.restore();
+  ball(ctx,x1,y1,R_H*sc,'#eaf6ff');ball(ctx,x2,y2,R_H*sc,'#eaf6ff');
+}
+function molO2(ctx,x,y,ang,sc){
+  sc=sc||1;const a=ang||0,d=R_O*1.05*sc;
+  const x1=x-Math.cos(a)*d,y1=y-Math.sin(a)*d,x2=x+Math.cos(a)*d,y2=y+Math.sin(a)*d;
+  ctx.save();ctx.strokeStyle='rgba(255,255,255,.45)';ctx.lineWidth=7*sc;
+  ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();ctx.restore();
+  ball(ctx,x1,y1,R_O*sc,C_O2);ball(ctx,x2,y2,R_O*sc,C_O2);
+}
+function atomH(ctx,x,y,sc){sc=sc||1;ball(ctx,x,y,R_H*sc,'#eaf6ff');}
+function atomO(ctx,x,y,sc){sc=sc||1;ball(ctx,x,y,R_O*sc,C_O2);txt(ctx,'O',x,y,17*sc,'#4a1e00');}
+/* 이온 */
+function ionBall(ctx,x,y,r,c,label){
+  glowBall(ctx,x,y,r,c,.95);
+  txt(ctx,label,x,y,r*0.82,'#04121f');
+}
+</script>
+
+<script>
+/* =====================================================================
+   실험 준비 · 실험 과정 애니메이션
+   ===================================================================== */
+
+/* ---------- 준비물 아이콘 ---------- */
+function icoRing(ctx,cx,cy,r,active){
+  ctx.save();ctx.beginPath();ctx.arc(cx,cy,r,0,TAU);
+  ctx.fillStyle=active?'rgba(143,227,255,.16)':'rgba(143,227,255,.05)';ctx.fill();
+  ctx.strokeStyle=active?'rgba(143,227,255,.85)':'rgba(143,227,255,.20)';ctx.lineWidth=active?3.5:2;
+  if(active){ctx.shadowColor='rgba(143,227,255,.7)';ctx.shadowBlur=22;}
+  ctx.stroke();ctx.restore();
+}
+const TOOL_DEFS=[
+  ['전기 분해 장치',(ctx,x,y,s,t)=>{
+    rr(ctx,x-s*.62,y-s*.16,s*1.24,s*.72,7);ctx.fillStyle='rgba(63,169,255,.35)';ctx.fill();
+    ctx.strokeStyle=C_GLASS;ctx.lineWidth=2.6;ctx.stroke();
+    [-1,1].forEach(d=>{rr(ctx,x+d*s*.30-s*.11,y-s*.66,s*.22,s*.84,9);
+      ctx.fillStyle='rgba(120,205,255,.32)';ctx.fill();ctx.strokeStyle=C_GLASS;ctx.lineWidth=2.4;ctx.stroke();
+      ball(ctx,x+d*s*.30,y+s*.10-((t*40)%(s*.7)),3.2,'#dff3ff');});
+  }],
+  ['전원 장치',(ctx,x,y,s,t)=>{
+    rr(ctx,x-s*.68,y-s*.42,s*1.36,s*.84,8);ctx.fillStyle='#dce6ee';ctx.fill();
+    rr(ctx,x-s*.56,y-s*.30,s*.52,s*.28,4);ctx.fillStyle='#11202c';ctx.fill();
+    txt(ctx,'6.0',x-s*.30,y-s*.16,s*.20,'#ff6b6b');
+    ball(ctx,x+s*.20,y+s*.18,s*.10,'#2b6cb0');ball(ctx,x+s*.48,y+s*.18,s*.10,'#e53e3e');
+  }],
+  ['수산화 나트륨',(ctx,x,y,s,t)=>{
+    rr(ctx,x-s*.40,y-s*.30,s*.80,s*.76,8);ctx.fillStyle='rgba(230,245,255,.20)';ctx.fill();
+    ctx.strokeStyle=C_GLASS;ctx.lineWidth=2.6;ctx.stroke();
+    rr(ctx,x-s*.20,y-s*.52,s*.40,s*.24,4);ctx.fillStyle='#8fb6d8';ctx.fill();
+    const sd=seeded(9,5);
+    for(let i=0;i<9;i++) ball(ctx,x-s*.30+sd[i]*s*.60,y+s*.10+((i%3)*s*.13),s*.07,'#ffffff');
+    txt(ctx,'NaOH',x,y+s*.62,s*.24,'#ffd166');
+  }],
+  ['주사기',(ctx,x,y,s,t)=>{drawSyringe(ctx,x-s*.55,y,s*1.05,s*.44,1,.45,'#9fd8ff',null);}],
+  ['점화 장치',(ctx,x,y,s,t)=>{
+    ctx.save();ctx.translate(x+s*.20,y+s*.10);ctx.scale(s/120,s/120);
+    rr(ctx,-70,-16,110,32,9);ctx.fillStyle='#f0c419';ctx.fill();ctx.restore();
+    drawFlame(ctx,x-s*.44,y-s*.10,s*.24,t,1);
+  }],
+  ['실험복 · 장갑',(ctx,x,y,s,t)=>{
+    ctx.save();ctx.strokeStyle='#bfe9ff';ctx.lineWidth=3.4;ctx.lineJoin='round';
+    ctx.beginPath();ctx.moveTo(x-s*.42,y-s*.30);ctx.lineTo(x-s*.20,y-s*.44);ctx.lineTo(x+s*.20,y-s*.44);
+    ctx.lineTo(x+s*.42,y-s*.30);ctx.lineTo(x+s*.30,y-s*.10);ctx.lineTo(x+s*.30,y+s*.44);
+    ctx.lineTo(x-s*.30,y+s*.44);ctx.lineTo(x-s*.30,y-s*.10);ctx.closePath();ctx.stroke();
+    ctx.fillStyle='rgba(191,233,255,.14)';ctx.fill();ctx.restore();
+    ball(ctx,x+s*.46,y+s*.30,s*.14,'#5ef2c4');
+  }]
+];
+ANIMS.tools=function(o){
+  o.frame=()=>{
+    clear(o);const {ctx,W,H}=o;
+    const n=TOOL_DEFS.length, gap=W/n, s=Math.min(gap*.44,H*.30);
+    TOOL_DEFS.forEach((d,i)=>{
+      const cx=gap*(i+.5), cy=H*.44, act=o.phase>=i+1;
+      icoRing(ctx,cx,cy,s*.98,act);
+      ctx.save();if(!act)ctx.globalAlpha=.35;
+      d[1](ctx,cx,cy,s*.92,o.t);ctx.restore();
+      txt(ctx,d[0],cx,H*.82,Math.min(24,gap*.16),act?'#ffffff':'rgba(219,238,255,.35)');
+    });
+  };
+};
+
+/* ---------- 안전 유의사항 ---------- */
+ANIMS.safety=function(o){
+  o.frame=()=>{
+    clear(o);const {ctx,W,H}=o;
+    const items=[
+      ['보호 장비 착용',C_H2,(x,y,s)=>{
+        ctx.save();ctx.strokeStyle='#bfe9ff';ctx.lineWidth=4;
+        ctx.beginPath();ctx.ellipse(x-s*.26,y,s*.24,s*.18,0,0,TAU);ctx.stroke();
+        ctx.beginPath();ctx.ellipse(x+s*.26,y,s*.24,s*.18,0,0,TAU);ctx.stroke();
+        ctx.beginPath();ctx.moveTo(x-s*.04,y);ctx.lineTo(x+s*.04,y);ctx.stroke();ctx.restore();
+      }],
+      ['전원·전선 취급 주의',C_NEG,(x,y,s)=>{
+        ctx.save();ctx.fillStyle='#ffd166';ctx.beginPath();
+        ctx.moveTo(x+s*.10,y-s*.42);ctx.lineTo(x-s*.22,y+s*.06);ctx.lineTo(x+s*.02,y+s*.06);
+        ctx.lineTo(x-s*.08,y+s*.44);ctx.lineTo(x+s*.26,y-s*.06);ctx.lineTo(x+s*.02,y-s*.06);
+        ctx.closePath();ctx.fill();ctx.restore();
+      }],
+      ['불꽃은 얼굴에서 멀리',C_O2,(x,y,s)=>{drawFlame(ctx,x,y+s*.12,s*.42,o.t,1);}],
+      ['수산화 나트륨 직접 만지지 않기',C_POS,(x,y,s)=>{
+        ctx.save();ctx.strokeStyle='#ff9f9f';ctx.lineWidth=5;ctx.lineCap='round';
+        ctx.beginPath();ctx.arc(x,y,s*.34,0,TAU);ctx.stroke();
+        ctx.beginPath();ctx.moveTo(x-s*.24,y-s*.24);ctx.lineTo(x+s*.24,y+s*.24);ctx.stroke();ctx.restore();
+      }]
+    ];
+    const gap=W/items.length;
+    items.forEach(([label,c,draw],i)=>{
+      const cx=gap*(i+.5), cy=H*.40, act=o.phase>=i+1, s=Math.min(gap*.40,H*.28);
+      ctx.save();if(!act)ctx.globalAlpha=.28;
+      ctx.beginPath();ctx.arc(cx,cy,s*.92,0,TAU);
+      ctx.fillStyle=hexA(c,act?.16:.05);ctx.fill();
+      ctx.strokeStyle=hexA(c,act?.9:.25);ctx.lineWidth=act?4:2;
+      if(act){ctx.shadowColor=hexA(c,.7);ctx.shadowBlur=20;}ctx.stroke();ctx.shadowBlur=0;
+      draw(cx,cy,s);
+      ctx.restore();
+      ctx.save();if(!act)ctx.globalAlpha=.3;
+      const words=label.split(' ');let ly=H*.80;
+      let line='';const out=[];
+      words.forEach(w=>{if((line+w).length>9){out.push(line);line=w+' ';}else line+=w+' ';});
+      out.push(line);
+      out.forEach((ln,k)=>txt(ctx,ln.trim(),cx,ly+k*26,22,act?'#fff':'#8aa'));
+      ctx.restore();
+    });
+  };
+};
+
+/* ---------- 전기 분해 장치 소개 ---------- */
+ANIMS.apparatus=function(o){
+  o.frame=()=>{
+    clear(o);const {ctx,W,H}=o;
+    const g=cellGeom(W*0.05,H*0.13,W*0.42,H*0.66);
+    const on=o.phase>=4;
+    const px=W*0.62, py=H*0.30, pw=W*0.32, phh=H*0.26;
+    const psu=drawPSU(ctx,px,py,pw,phh,on,o.t);
+    if(o.phase>=3) drawWires(ctx,g,psu,on,o.t);
+    drawCell(ctx,g,{sol:true,t:o.t,gasL:on?Math.min(.20,ph(o,4)*.05):0,gasR:on?Math.min(.10,ph(o,4)*.025):0,
+                    bubL:on?1:0,bubR:on?.5:0,glowNeg:o.phase>=2,glowPos:o.phase>=2});
+    if(o.phase>=1){
+      chipTxt(ctx,'수산화 나트륨 수용액',g.tankL+g.W*.5,g.tankBot+76,23,'#bfe9ff');
+      chipTxt(ctx,'기체가 모이는 관',(g.c1+g.c2)/2,g.tubeTop-40,23,'#dbeeff');
+    }
+    if(o.phase>=2){
+      chipTxt(ctx,'(−)극',g.c1,g.tankBot+30,25,C_NEG);
+      chipTxt(ctx,'(+)극',g.c2,g.tankBot+30,25,C_POS);
+    }
+    if(o.phase>=3) chipTxt(ctx,'전원 장치',px+pw/2,py-32,24,'#ffd166');
+    if(on){
+      chipTxt(ctx,'전류가 흐른다!',px+pw/2,py+phh+52,24,'#5ef2c4');
+      chipTxt(ctx,'물이 분해된다',px+pw/2,py+phh+98,24,'#5ef2c4');
+    }
+  };
+};
+
+/* ---------- 과정 ➊ : 수산화 나트륨 수용액 넣고 전극 연결 ---------- */
+ANIMS.setup=function(o){
+  const sd=seeded(24,11);
+  o.frame=()=>{
+    clear(o);const {ctx,W,H}=o;
+    const g=cellGeom(W*0.05,H*0.21,W*0.42,H*0.61);
+    const on=o.phase>=4;
+    const px=W*0.62, py=H*0.32, pw=W*0.32, phh=H*0.26;
+    const psu=drawPSU(ctx,px,py,pw,phh,on,o.t);
+    if(o.phase>=3) drawWires(ctx,g,psu,on,o.t);
+    const pouring=o.phase===1;
+    drawCell(ctx,g,{sol:o.phase>=1,t:o.t,
+      gasL:on?Math.min(.14,ph(o,4)*.05):0,gasR:on?Math.min(.07,ph(o,4)*.025):0,
+      bubL:on?1:0,bubR:on?.5:0,glowNeg:on,glowPos:on});
+    if(pouring){
+      /* 비커에서 물 붓기 */
+      const bx=g.tankL+g.W*.5, by=g.Y-14;
+      ctx.save();ctx.translate(bx,by-52);ctx.rotate(-0.5);
+      beaker(ctx,-44,-34,88,66,4);
+      ctx.fillStyle='rgba(63,169,255,.5)';ctx.fillRect(-40,-6,80,36);
+      ctx.restore();
+      ctx.save();ctx.strokeStyle='rgba(120,205,255,.75)';ctx.lineWidth=9;ctx.lineCap='round';
+      ctx.beginPath();ctx.moveTo(bx+16,by-42);
+      ctx.quadraticCurveTo(bx+24,by-6,bx+6,g.solTop);ctx.stroke();ctx.restore();
+      chipTxt(ctx,'물 + 수산화 나트륨 소량',bx,26,22,'#bfe9ff');
+    }
+    /* 수산화 나트륨이 이온으로 녹는다 */
+    if(o.phase>=2){
+      const e=ease(Math.min(1,ph(o,2)*.8));
+      for(let i=0;i<8;i++){
+        const x=lerp(g.tankL+30,g.tankR-30,sd[i]);
+        const ty=lerp(g.solTop+26,g.tankBot-40,sd[i+8]);
+        const y=lerp(g.solTop-24,ty,e);
+        if(i%2===0) ionBall(ctx,x,y+Math.sin(o.t*1.6+i)*6,14,'#7fc4ff','+');
+        else ionBall(ctx,x,y+Math.cos(o.t*1.4+i)*6,14,'#ff9fb0','−');
+      }
+      chipTxt(ctx,'물에 녹아 이온이 생긴다',g.tankL+g.W*.5,g.tankBot+34,22,'#ffd166');
+    }
+    if(o.phase>=3) chipTxt(ctx,'전원 장치에 연결',px+pw/2,py-32,23,'#8fe3ff');
+    if(on){
+      chipTxt(ctx,'전원 ON!',px+pw/2,py+phh+50,24,'#5ef2c4');
+      chipTxt(ctx,'전류가 흐른다',px+pw/2,py+phh+94,24,'#5ef2c4');
+    }
+  };
+};
+
+/* ---------- 왜 순수한 물이 아니라 수산화 나트륨 수용액? ---------- */
+function miniCell(ctx,x,y,w,h,label,labelColor){
+  rr(ctx,x,y,w,h,14);ctx.fillStyle='rgba(10,34,60,.5)';ctx.fill();
+  ctx.strokeStyle=C_GLASS;ctx.lineWidth=3;ctx.stroke();
+  const sol=y+h*.22;
+  ctx.save();rr(ctx,x+3,sol,w-6,y+h-sol-3,10);ctx.clip();
+  const gr=ctx.createLinearGradient(0,sol,0,y+h);
+  gr.addColorStop(0,'rgba(63,169,255,.34)');gr.addColorStop(1,'rgba(28,110,190,.52)');
+  ctx.fillStyle=gr;ctx.fillRect(x,sol,w,h);ctx.restore();
+  return {sol,ex1:x+w*.24,ex2:x+w*.76,eTop:y+h*.10,eBot:y+h-22};
+}
+ANIMS.electrolyte=function(o){
+  const sd=seeded(60,3);
+  o.frame=()=>{
+    clear(o);const {ctx,W,H}=o;
+    const bw=W*.40, bh=H*.52, by=H*.26;
+    const lx=W*.05, rx=W*.55;
+
+    /* ===== 왼쪽 : 순수한 물 ===== */
+    const L=miniCell(ctx,lx,by,bw,bh);
+    chipTxt(ctx,'순수한 물',lx+bw/2,by-92,26,'#bfe9ff');
+    /* 물 분자만 떠다님 */
+    for(let i=0;i<9;i++){
+      const x=lx+lerp(30,bw-30,sd[i]), y=L.sol+lerp(30,bh*.60,sd[i+9]);
+      molH2O(ctx,x+Math.sin(o.t*.9+i)*7,y+Math.cos(o.t*.8+i*1.3)*5,i*.7,.52);
+    }
+    [[L.ex1,C_NEG,'−'],[L.ex2,C_POS,'+']].forEach(([ex,c,s])=>{
+      rr(ctx,ex-7,L.eTop,14,L.eBot-L.eTop,6);ctx.fillStyle=shade(c,-30);ctx.fill();
+      txt(ctx,s,ex,L.eTop-16,25,c);
+    });
+    ctx.save();ctx.strokeStyle='rgba(200,220,240,.45)';ctx.lineWidth=4;ctx.lineCap='round';
+    ctx.beginPath();ctx.moveTo(L.ex1,L.eTop-4);ctx.lineTo(L.ex1,by-46);ctx.lineTo(L.ex2,by-46);ctx.lineTo(L.ex2,L.eTop-4);ctx.stroke();ctx.restore();
+    /* X 표시 */
+    ctx.save();ctx.strokeStyle='#ff6b6b';ctx.lineWidth=7;ctx.lineCap='round';
+    const mx=(L.ex1+L.ex2)/2, my=by-46;
+    ctx.beginPath();ctx.moveTo(mx-16,my-16);ctx.lineTo(mx+16,my+16);
+    ctx.moveTo(mx+16,my-16);ctx.lineTo(mx-16,my+16);ctx.stroke();ctx.restore();
+    chipTxt(ctx,'전류가 거의 흐르지 않는다',lx+bw/2,by+bh+32,22,'#ff9f9f');
+    chipTxt(ctx,'물이 분해되지 않는다',lx+bw/2,by+bh+76,22,'#ff9f9f');
+
+    /* ===== 오른쪽 : 수산화 나트륨 수용액 ===== */
+    if(o.phase>=1){
+      const R=miniCell(ctx,rx,by,bw,bh);
+      chipTxt(ctx,'수산화 나트륨 수용액',rx+bw/2,by-92,26,'#ffd166');
+      const moving=o.phase>=2;
+      /* 전극 먼저 */
+      [[R.ex1,C_NEG,'−'],[R.ex2,C_POS,'+']].forEach(([ex,c,s])=>{
+        ctx.save();rr(ctx,ex-7,R.eTop,14,R.eBot-R.eTop,6);
+        if(moving){ctx.shadowColor=c;ctx.shadowBlur=20;}ctx.fillStyle=shade(c,-20);ctx.fill();ctx.restore();
+        txt(ctx,s,ex,R.eTop-16,25,c);
+      });
+      /* 이온 : 양이온→(−)극, 음이온→(+)극 */
+      for(let i=0;i<8;i++){
+        const pos=i%2===0;
+        const homeX=rx+lerp(bw*.34,bw*.66,sd[i+20]);
+        const tx=(pos?R.ex1:R.ex2)+(pos?-1:1)*lerp(30,60,sd[i+40]);
+        const u=moving?Math.min(.95,ph(o,2)*.5+sd[i+30]*.2):0;
+        const x=lerp(homeX,tx,ease(u)), y=R.sol+lerp(34,bh*.58,sd[i+10])+Math.sin(o.t*1.5+i)*5;
+        ionBall(ctx,x,y,15,pos?'#7fc4ff':'#ff9fb0',pos?'+':'−');
+      }
+      ctx.save();ctx.strokeStyle=moving?'#ffd166':'rgba(200,220,240,.45)';ctx.lineWidth=4;ctx.lineCap='round';
+      ctx.beginPath();ctx.moveTo(R.ex1,R.eTop-4);ctx.lineTo(R.ex1,by-46);ctx.lineTo(R.ex2,by-46);ctx.lineTo(R.ex2,R.eTop-4);ctx.stroke();
+      if(moving){ctx.fillStyle='#fff8c9';
+        for(let k=0;k<4;k++){const u=((o.t*.5+k/4)%1);
+          ctx.beginPath();ctx.arc(lerp(R.ex1,R.ex2,u),by-46,5,0,TAU);ctx.fill();}}
+      ctx.restore();
+      if(moving) chipTxt(ctx,'전류가 흐른다',rx+bw/2,by+bh+32,22,'#5ef2c4');
+      /* 기포 */
+      if(o.phase>=3){
+        ctx.save();rr(ctx,rx+3,R.sol,bw-6,by+bh-R.sol-3,10);ctx.clip();
+        [[R.ex1,2],[R.ex2,1]].forEach(([ex,rate])=>{
+          for(let i=0;i<5*rate;i++){
+            const yy=(by+bh-14)-(((o.t*46*rate+i*37)%(bh*.66)));
+            ctx.globalAlpha=.85;ball(ctx,ex+((i%2)?22:-22)+Math.sin(o.t*2.2+i)*5,yy,lerp(3.6,5.8,(i%3)/2),'#e8f8ff');
+          }
+        });ctx.restore();
+        chipTxt(ctx,'물이 분해되어 기체 발생!',rx+bw/2,by+bh+76,22,'#5ef2c4');
+      }
+    }
+  };
+};
+
+/* ---------- 과정 ➋ : 기체 발생과 부피비 ---------- */
+ANIMS.bubbles=function(o){
+  o.frame=()=>{
+    clear(o);const {ctx,W,H}=o;
+    const g=cellGeom(W*0.26,H*0.10,W*0.38,H*0.72);
+    const grow=o.phase>=1?Math.min(.60,ph(o,1)*.13):0;
+    const gL=grow, gR=grow/2;
+    drawCell(ctx,g,{sol:true,t:o.t,gasL:gL,gasR:gR,bubL:1,bubR:.5,glowNeg:true,glowPos:true});
+    chipTxt(ctx,'(−)극',g.c1,g.tankBot+30,25,C_NEG);
+    chipTxt(ctx,'(+)극',g.c2,g.tankBot+30,25,C_POS);
+    if(o.phase>=1){
+      chipTxt(ctx,'기포 발생!',W*.125,H*.30,25,'#8fe3ff');
+      chipTxt(ctx,'기체가 모인다',W*.125,H*.40,22,'#dbeeff');
+    }
+    /* 부피 비교 */
+    if(o.phase>=2){
+      const inTop=g.tubeTop+4, inH=(g.tubeBot-2)-inTop;
+      [[g.c1,gL,C_H2,'2'],[g.c2,gR,C_O2,'1']].forEach(([cx,gg,c,lab],i)=>{
+        const y2=inTop+gg*inH, bx=cx+(i?46:-46);
+        ctx.save();ctx.strokeStyle=c;ctx.lineWidth=3.5;ctx.lineCap='round';
+        ctx.beginPath();ctx.moveTo(bx,inTop);ctx.lineTo(bx,y2);ctx.stroke();
+        ctx.beginPath();ctx.moveTo(bx-9,inTop);ctx.lineTo(bx+9,inTop);
+        ctx.moveTo(bx-9,y2);ctx.lineTo(bx+9,y2);ctx.stroke();ctx.restore();
+        chipTxt(ctx,lab,bx+(i?26:-26),(inTop+y2)/2,26,c);
+      });
+      chipTxt(ctx,'부피비  (−)극 : (+)극 = 2 : 1',W*.50,H*.945,25,'#ffd166');
+    }
+    /* 기체 정체 */
+    if(o.phase>=3){
+      chipTxt(ctx,'수소일까?',g.c1,H*.037,22,C_H2);
+      chipTxt(ctx,'산소일까?',g.c2,H*.037,22,C_O2);
+      chipTxt(ctx,'두 기체는',W*.865,H*.32,23,'#dbeeff');
+      chipTxt(ctx,'같은 물질일까?',W*.865,H*.42,23,'#ffd166');
+    }
+  };
+};
+
+/* ---------- 과정 ➋ 후반 : 주사기로 기체 모으기 ---------- */
+ANIMS.collect=function(o){
+  o.frame=()=>{
+    clear(o);const {ctx,W,H}=o;
+    const cs=[[W*.28,C_H2,'(−)극 기체','기체 A'],[W*.72,C_O2,'(+)극 기체','기체 B']];
+    const tubeTop=H*.34, tubeBot=H*.94, hw=44;
+    const pulled=o.phase>=3?Math.min(1,ph(o,3)*.55):0;
+    cs.forEach(([cx,c,lab,syl],i)=>{
+      /* 관 */
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(cx-hw,tubeBot);ctx.lineTo(cx-hw,tubeTop+hw);
+      ctx.arcTo(cx-hw,tubeTop,cx,tubeTop,hw);ctx.arcTo(cx+hw,tubeTop,cx+hw,tubeTop+hw,hw);
+      ctx.lineTo(cx+hw,tubeBot);ctx.closePath();
+      ctx.save();ctx.clip();
+      const gasBot=lerp(tubeBot-46,tubeTop+hw*1.9,pulled);
+      ctx.fillStyle=hexA(c,.32);ctx.fillRect(cx-hw,tubeTop,hw*2,gasBot-tubeTop);
+      const gr=ctx.createLinearGradient(0,gasBot,0,tubeBot);
+      gr.addColorStop(0,'rgba(90,190,255,.42)');gr.addColorStop(1,'rgba(28,110,190,.6)');
+      ctx.fillStyle=gr;ctx.fillRect(cx-hw,gasBot,hw*2,tubeBot-gasBot);
+      ctx.strokeStyle=hexA(c,.9);ctx.lineWidth=3;ctx.beginPath();
+      ctx.moveTo(cx-hw,gasBot);ctx.lineTo(cx+hw,gasBot);ctx.stroke();
+      ctx.restore();
+      ctx.strokeStyle=C_GLASS;ctx.lineWidth=3.5;ctx.stroke();ctx.restore();
+      chipTxt(ctx,lab,cx,tubeBot-34,24,c);
+      /* 고무마개 */
+      rr(ctx,cx-hw-4,tubeTop-20,hw*2+8,24,6);ctx.fillStyle='#2b3b4d';ctx.fill();
+      ctx.strokeStyle='rgba(180,210,240,.5)';ctx.lineWidth=2;ctx.stroke();
+      if(o.phase>=1) chipTxt(ctx,'고무마개',cx+(i?128:-128),tubeTop-8,21,'#bfe9ff');
+      /* 주사기 (세로 · 노즐이 아래를 향해 고무마개에 꽂힌다) */
+      const inserted=o.phase>=2;
+      const SL=H*.26, sbw=SL*.72, snz=SL*.26;
+      const syTop=(inserted?tubeTop-6:tubeTop-76)-(sbw+snz);
+      ctx.save();ctx.translate(cx,syTop);ctx.rotate(Math.PI/2);
+      drawSyringe(ctx,0,0,SL,52,1,pulled,c,null);
+      ctx.restore();
+      if(o.phase>=4) chipTxt(ctx,syl,cx+(i?128:-128),syTop+sbw*.45,25,c);
+      if(o.phase>=3&&pulled>.15){
+        ctx.save();ctx.strokeStyle=hexA(c,.8);ctx.lineWidth=3;
+        arrow(ctx,cx,tubeTop+30,cx,syTop+sbw+10,hexA(c,.85),4,12);ctx.restore();
+      }
+    });
+  };
+};
+</script>
+
+<script>
+/* =====================================================================
+   실험 결과 확인 · 원리 애니메이션
+   ===================================================================== */
+
+/* ---------- (−)극 기체 + 불꽃 → '펑!' → 수소 ---------- */
+ANIMS.popTest=function(o){
+  const sd=seeded(30,17);
+  o.frame=()=>{
+    const {ctx,W,H}=o;
+    /* 폭발 주기 계산 */
+    let boom=-1;
+    if(o.phase>=3){const cyc=ph(o,3)%3.0; boom=cyc;}
+    const flash=(boom<0)?0:(boom<.12?1:(boom<1.35?Math.pow(1-(boom-.12)/1.25,1.5):0));
+    clear(o);
+    /* 섬광 배경 */
+    if(flash>0){ctx.save();ctx.globalAlpha=flash*.55;
+      const gg=ctx.createRadialGradient(W*.62,H*.50,10,W*.62,H*.50,W*.55);
+      gg.addColorStop(0,'#fff8d0');gg.addColorStop(.4,'rgba(255,180,60,.75)');gg.addColorStop(1,'rgba(255,90,20,0)');
+      ctx.fillStyle=gg;ctx.fillRect(0,0,W,H);ctx.restore();}
+    ctx.save();
+    if(flash>.15){ctx.translate(rand(-1,1)*10*flash,rand(-1,1)*10*flash);}
+
+    const cy=H*.50, sy=W*.06;
+    /* 주사기 (노즐 오른쪽) */
+    let p=1;
+    if(o.phase===2) p=lerp(1,.22,ease(Math.min(1,ph(o,2)*.7)));
+    else if(o.phase>=3) p=(boom<.30)?lerp(1,.12,ease(boom/.30)):.12;
+    const s=drawSyringe(ctx,sy,cy,W*.44,72,1,p,C_H2,null);
+    chipTxt(ctx,'(−)극에서 모은 기체',sy+W*.16,cy-72,24,C_H2);
+
+    /* 점화 장치 */
+    const far=W*.94, near=s.tipX+118;
+    const lx=o.phase>=1?lerp(far,near,ease(Math.min(1,ph(o,1)*1.1))):far;
+    drawLighter(ctx,lx,cy+8,1,o.t,o.phase>=1);
+    if(o.phase>=1&&o.phase<3) chipTxt(ctx,'불꽃을 가까이!',lx+10,cy+78,23,'#ffd166');
+
+    /* 기체가 밀려 나옴 */
+    if(o.phase>=2&&flash<=0){
+      for(let i=0;i<7;i++){
+        const u=((o.t*1.3+sd[i])%1);
+        ctx.globalAlpha=(1-u)*.75;
+        ball(ctx,s.tipX+u*90,cy+Math.sin(o.t*3+i*2)*12*u,5.5,'#c9fff0');
+      }
+      ctx.globalAlpha=1;
+    }
+    /* 폭발 */
+    if(flash>0){
+      const bx=s.tipX+62, byy=cy;
+      for(let k=0;k<3;k++){
+        const r=(boom*230)+k*38;
+        ctx.save();ctx.globalAlpha=Math.max(0,flash-k*.18);
+        ctx.strokeStyle='#ffd166';ctx.lineWidth=10-k*2.4;
+        ctx.beginPath();ctx.arc(bx,byy,r,0,TAU);ctx.stroke();ctx.restore();
+      }
+      for(let i=0;i<20;i++){
+        const a=i/20*TAU, r=boom*180*(0.6+sd[i]*0.9);
+        ctx.globalAlpha=flash;
+        ball(ctx,bx+Math.cos(a)*r,byy+Math.sin(a)*r,lerp(11,3,Math.min(1,boom/1.2)),i%3?'#ffd166':'#fff1b8');
+      }
+      ctx.globalAlpha=1;
+      drawFlame(ctx,bx,byy,lerp(96,22,ease(Math.min(1,boom/1.2))),o.t,Math.min(1,flash*1.4));
+      ctx.save();
+      const sc=lerp(.75,1.25,ease(Math.min(1,boom/.9)));
+      ctx.translate(bx,byy-160);ctx.scale(sc,sc);ctx.globalAlpha=Math.min(1,flash*1.8);
+      ctx.save();ctx.shadowColor='rgba(255,120,20,.9)';ctx.shadowBlur=30;
+      txt(ctx,'펑!',0,0,92,'#fff1b8');ctx.restore();
+      ctx.restore();
+    }
+    ctx.restore();
+    /* 결론 */
+    if(o.phase>=3&&ph(o,3)>0.9){
+      chipTxt(ctx,'‘펑’ 소리를 내며 탄다',W*.50,H*.10,26,'#ffd166');
+    }
+    if(o.phase>=4){
+      rr(ctx,W*.18,H*.855,W*.64,58,14);ctx.fillStyle='rgba(94,242,196,.16)';ctx.fill();
+      ctx.strokeStyle=hexA(C_H2,.8);ctx.lineWidth=2.5;ctx.stroke();
+      txt(ctx,'→ (−)극에 모인 기체는  수소',W*.50,H*.855+29,31,C_H2);
+    }
+  };
+};
+
+/* ---------- (+)극 기체 + 꺼져 가는 향불 → 다시 타오름 → 산소 ---------- */
+ANIMS.glowTest=function(o){
+  const sd=seeded(30,23);
+  o.frame=()=>{
+    clear(o);const {ctx,W,H}=o;
+    const cy=H*.50, sy=W*.06;
+    let p=1;
+    if(o.phase===2) p=lerp(1,.25,ease(Math.min(1,ph(o,2)*.6)));
+    else if(o.phase>=3) p=lerp(.25,.05,ease(Math.min(1,ph(o,3)*.4)));
+    const s=drawSyringe(ctx,sy,cy,W*.44,72,1,p,C_O2,null);
+    chipTxt(ctx,'(+)극에서 모은 기체',sy+W*.16,cy-72,24,C_O2);
+
+    /* 향불 */
+    const far=W*.96, near=s.tipX+150;
+    const ix=o.phase>=1?lerp(far,near,ease(Math.min(1,ph(o,1)*1.1))):far;
+    const flare=o.phase>=3;
+    const inc=drawIncense(ctx,ix,cy+6,1,o.t,flare?'flare':'ember');
+    if(o.phase===0) chipTxt(ctx,'꺼져 가는 향불',ix-60,cy+80,23,'#ffb787');
+    if(o.phase===1||o.phase===2) chipTxt(ctx,'불씨를 가까이!',ix-60,cy+80,23,'#ffd166');
+
+    /* 산소가 밀려 나감 */
+    if(o.phase>=2){
+      for(let i=0;i<8;i++){
+        const u=((o.t*1.15+sd[i])%1);
+        ctx.globalAlpha=(1-u)*.8;
+        ball(ctx,s.tipX+u*(inc.tipX-s.tipX),cy+Math.sin(o.t*2.6+i*2)*13*u,5.6,'#ffd9a8');
+      }
+      ctx.globalAlpha=1;
+    }
+    /* 되살아나는 불꽃 */
+    if(flare){
+      const gsz=lerp(20,64,ease(Math.min(1,ph(o,3)*.55)))*(1+Math.sin(o.t*8)*.05);
+      drawFlame(ctx,inc.tipX,cy-2,gsz,o.t,1);
+      ctx.save();ctx.globalAlpha=.30+.14*Math.sin(o.t*5);
+      const gg=ctx.createRadialGradient(inc.tipX,cy,8,inc.tipX,cy,gsz*3.4);
+      gg.addColorStop(0,'rgba(255,200,90,.7)');gg.addColorStop(1,'rgba(255,140,40,0)');
+      ctx.fillStyle=gg;ctx.beginPath();ctx.arc(inc.tipX,cy,gsz*3.4,0,TAU);ctx.fill();ctx.restore();
+      for(let i=0;i<12;i++){
+        const u=((o.t*1.1+sd[i+14])%1);
+        ctx.globalAlpha=(1-u)*.9;
+        ball(ctx,inc.tipX+Math.sin(i*2.1+o.t*2)*26*u,cy-u*150,3.4,'#ffe08a');
+      }
+      ctx.globalAlpha=1;
+      chipTxt(ctx,'불꽃이 다시 크게 타오른다!',W*.50,H*.10,26,'#ffd166');
+    }
+    if(o.phase>=4){
+      rr(ctx,W*.18,H*.855,W*.64,58,14);ctx.fillStyle='rgba(255,159,69,.16)';ctx.fill();
+      ctx.strokeStyle=hexA(C_O2,.8);ctx.lineWidth=2.5;ctx.stroke();
+      txt(ctx,'→ (+)극에 모인 기체는  산소',W*.50,H*.855+29,31,C_O2);
+    }
+  };
+};
+
+/* ---------- 물 분자가 분해되는 모형 ---------- */
+ANIMS.decompose=function(o){
+  o.frame=()=>{
+    clear(o);const {ctx,W,H}=o;
+    const cx=W*.50, cy=H*.46;
+    const u1=o.phase>=1?ease(Math.min(1,ph(o,1)*.8)):0;   /* 결합 끊김 */
+    const u2=o.phase>=2?ease(Math.min(1,ph(o,2)*.7)):0;   /* 재결합 + 이동 */
+
+    /* 양쪽 전극 */
+    [[W*.06,C_NEG,'(−)극'],[W*.94,C_POS,'(+)극']].forEach(([x,c,l])=>{
+      ctx.save();rr(ctx,x-11,H*.16,22,H*.62,8);
+      ctx.fillStyle=shade(c,-30);ctx.fill();ctx.strokeStyle=c;ctx.lineWidth=2.5;ctx.stroke();ctx.restore();
+      chipTxt(ctx,l,x,H*.86,23,c);
+    });
+
+    /* 물 분자 2개 → 원자 → 새 분자 */
+    const wats=[[cx-130,cy],[cx+130,cy]];
+    /* 원자 좌표 계산 */
+    const HT=[[W*.24,cy-70],[W*.24,cy+70]];      /* 수소 분자 2개 중심 */
+    const OT=[W*.78,cy];                          /* 산소 분자 1개 중심 */
+    const dH=R_H*1.35, dO=R_O*1.05;
+    const hEnd=[[HT[0][0]-dH,HT[0][1]],[HT[1][0]-dH,HT[1][1]],[HT[0][0]+dH,HT[0][1]],[HT[1][0]+dH,HT[1][1]]];
+    const oEnd=[[OT[0]-dO,OT[1]],[OT[0]+dO,OT[1]]];
+
+    const hStart=[],oStart=[],hMid=[],oMid=[];
+    wats.forEach(([wx,wy],i)=>{
+      hStart.push([wx-25.9,wy-19.7],[wx+25.9,wy-19.7]);
+      oStart.push([wx,wy]);
+      hMid.push([wx-88,wy-96],[wx+88,wy-96]);
+      oMid.push([wx,wy+92]);
+    });
+    /* 순서 맞추기: hStart 0,1 = 물1의 H / 2,3 = 물2의 H */
+    const hNow=hStart.map((s,i)=>{
+      const m=hMid[i], e=hEnd[i];
+      const a=[lerp(s[0],m[0],u1),lerp(s[1],m[1],u1)];
+      return [lerp(a[0],e[0],u2),lerp(a[1],e[1],u2)];
+    });
+    const oNow=oStart.map((s,i)=>{
+      const m=oMid[i], e=oEnd[i];
+      const a=[lerp(s[0],m[0],u1),lerp(s[1],m[1],u1)];
+      return [lerp(a[0],e[0],u2),lerp(a[1],e[1],u2)];
+    });
+    /* 결합선 */
+    ctx.save();ctx.lineCap='round';
+    if(u1<1){
+      ctx.globalAlpha=1-u1;ctx.strokeStyle='rgba(255,255,255,.45)';ctx.lineWidth=6;
+      [[0,0],[1,0],[2,1],[3,1]].forEach(([hi,oi])=>{
+        ctx.beginPath();ctx.moveTo(oNow[oi][0],oNow[oi][1]);ctx.lineTo(hNow[hi][0],hNow[hi][1]);ctx.stroke();});
+    }
+    if(u2>0){
+      ctx.globalAlpha=u2;ctx.strokeStyle='rgba(255,255,255,.5)';ctx.lineWidth=6;
+      [[0,2],[1,3]].forEach(([a,b])=>{ctx.beginPath();ctx.moveTo(hNow[a][0],hNow[a][1]);ctx.lineTo(hNow[b][0],hNow[b][1]);ctx.stroke();});
+      ctx.lineWidth=7;ctx.beginPath();ctx.moveTo(oNow[0][0],oNow[0][1]);ctx.lineTo(oNow[1][0],oNow[1][1]);ctx.stroke();
+    }
+    ctx.restore();
+    /* 원자 */
+    oNow.forEach(([x,y])=>atomO(ctx,x,y,1));
+    hNow.forEach(([x,y])=>atomH(ctx,x,y,1));
+
+    /* 전류(분해 에너지) 표시 */
+    if(o.phase>=1&&u2<1){
+      ctx.save();ctx.globalAlpha=.55+.35*Math.sin(o.t*6);
+      arrow(ctx,W*.10,cy,cx-210,cy,'#ffd166',5,15);
+      arrow(ctx,W*.90,cy,cx+210,cy,'#ffd166',5,15);
+      ctx.restore();
+      chipTxt(ctx,'전류를 흘려 준다',cx,H*.14,25,'#ffd166');
+    }
+    /* 라벨 */
+    if(o.phase===0) chipTxt(ctx,'물 분자',cx,cy+92,26,'#bfe9ff');
+    if(o.phase>=2&&u2>.6){
+      chipTxt(ctx,'수소 분자 2개',W*.24,cy+140,25,C_H2);
+      chipTxt(ctx,'산소 분자 1개',W*.78,cy+140,25,C_O2);
+    }
+    if(o.phase>=3){
+      rr(ctx,W*.13,H*.855,W*.74,60,14);ctx.fillStyle='rgba(143,227,255,.14)';ctx.fill();
+      ctx.strokeStyle='rgba(143,227,255,.6)';ctx.lineWidth=2.5;ctx.stroke();
+      const y=H*.855+30;
+      txt(ctx,'물',W*.22,y,32,'#bfe9ff');
+      txt(ctx,'→',W*.31,y,32,'#ffd166');
+      txt(ctx,'수소',W*.42,y,32,C_H2);
+      txt(ctx,'+',W*.52,y,32,'#ffffff');
+      txt(ctx,'산소',W*.62,y,32,C_O2);
+      txt(ctx,'( 부피비  2 : 1 )',W*.78,y,27,'#ffd166');
+    }
+  };
+};
+
+/* ---------- 원소 vs 화합물 ---------- */
+ANIMS.compound=function(o){
+  o.frame=()=>{
+    clear(o);const {ctx,W,H}=o;
+    const cy=H*.42;
+    /* 물 카드 */
+    const cardW=W*.24, cardH=H*.46;
+    function card(x,title,c,drawIn,active){
+      ctx.save();rr(ctx,x-cardW/2,cy-cardH/2,cardW,cardH,18);
+      ctx.fillStyle=active?hexA(c,.13):'rgba(12,35,64,.5)';ctx.fill();
+      ctx.strokeStyle=active?hexA(c,.85):'rgba(143,227,255,.22)';ctx.lineWidth=active?3.5:2;
+      if(active){ctx.shadowColor=hexA(c,.55);ctx.shadowBlur=26;}ctx.stroke();ctx.restore();
+      txt(ctx,title,x,cy-cardH/2+34,29,active?c:'rgba(219,238,255,.4)');
+      ctx.save();if(!active)ctx.globalAlpha=.35;drawIn(x,cy+10);ctx.restore();
+    }
+    card(W*.18,'물',  '#8fe3ff',(x,y)=>{molH2O(ctx,x,y,-Math.PI/2,1.15);},true);
+    const split=o.phase>=1;
+    card(W*.55,'수소','#5ef2c4',(x,y)=>{molH2(ctx,x,y-34,0,1.25);molH2(ctx,x,y+34,0,1.25);},split);
+    card(W*.85,'산소','#ff9f45',(x,y)=>{molO2(ctx,x,y,0,1.05);},split);
+
+    if(split){
+      ctx.save();ctx.globalAlpha=.92;
+      arrow(ctx,W*.18+cardW/2+8,cy-30,W*.55-cardW/2-8,cy-30,'#ffd166',5,15);
+      curveArrow(ctx,W*.18+cardW/2+8,cy+40,W*.52,cy+cardH/2+56,W*.85-cardW/2-8,cy+52,'#ffd166',5,15);
+      ctx.restore();
+      chipTxt(ctx,'전기 분해',W*.365,cy-74,23,'#ffd166');
+    }
+    if(o.phase>=2){
+      chipTxt(ctx,'더 이상 분해되지 않는다 = 원소',W*.70,cy-cardH/2-36,23,'#bfe9ff');
+      chipTxt(ctx,'분해된다 → 원소가 아니다',W*.18,cy+cardH/2+34,23,'#ff9f9f');
+    }
+    if(o.phase>=3){
+      rr(ctx,W*.06,H*.885,W*.88,58,14);ctx.fillStyle='rgba(255,92,120,.15)';ctx.fill();
+      ctx.strokeStyle='rgba(255,92,120,.65)';ctx.lineWidth=2.5;ctx.stroke();
+      txt(ctx,'물 = 수소와 산소가 일정한 비율로 결합한  화합물',W*.50,H*.885+29,30,'#ff8fa3');
+    }
+  };
+};
+
+/* ---------- 두 기체 확인 결과 요약 ---------- */
+ANIMS.twoTest=function(o){
+  o.frame=()=>{
+    clear(o);const {ctx,W,H}=o;
+    const half=W/2;
+    /* 왼쪽: 수소 */
+    ctx.save();ctx.strokeStyle='rgba(143,227,255,.25)';ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(half,H*.08);ctx.lineTo(half,H*.92);ctx.stroke();ctx.restore();
+    const boom=o.phase>=1?(ph(o,1)%2.2):-1;
+    const fl=(boom>=0&&boom<.8)?Math.pow(1-boom/.8,2):0;
+    /* 수소 쪽 */
+    const s1=drawSyringe(ctx,W*.04,H*.46,half*.62,58,1,.3,C_H2,null);
+    chipTxt(ctx,'(−)극 기체',W*.16,H*.46-62,23,C_H2);
+    drawLighter(ctx,s1.tipX+112,H*.46+6,1,o.t,o.phase>=1);
+    if(fl>0){
+      ctx.save();ctx.globalAlpha=fl;
+      for(let k=0;k<2;k++){ctx.strokeStyle='#ffd166';ctx.lineWidth=5-k*1.5;
+        ctx.beginPath();ctx.arc(s1.tipX+50,H*.46,boom*230+k*40,0,TAU);ctx.stroke();}
+      ctx.restore();
+      drawFlame(ctx,s1.tipX+50,H*.46,lerp(60,18,boom/.8),o.t,fl);
+      ctx.save();ctx.globalAlpha=Math.min(1,fl*2);txt(ctx,'펑!',s1.tipX+50,H*.46-116,62,'#ffd166');ctx.restore();
+    }
+    if(o.phase>=1) chipTxt(ctx,'‘펑’ 소리 → 수소',half*.5,H*.86,26,C_H2);
+    /* 산소 쪽 */
+    const s2=drawSyringe(ctx,half+W*.04,H*.46,half*.62,58,1,.3,C_O2,null);
+    chipTxt(ctx,'(+)극 기체',half+W*.16,H*.46-62,23,C_O2);
+    const inc=drawIncense(ctx,s2.tipX+86,H*.46+4,1,o.t,o.phase>=2?'flare':'ember');
+    if(o.phase>=2){
+      const gsz=lerp(20,56,ease(Math.min(1,ph(o,2)*.6)));
+      drawFlame(ctx,inc.tipX,H*.46-2,gsz,o.t,1);
+      chipTxt(ctx,'불꽃이 크게 → 산소',half+half*.5,H*.86,26,C_O2);
+    }
+    if(o.phase>=3){
+      rr(ctx,W*.10,H*.02,W*.80,52,13);ctx.fillStyle='rgba(255,92,120,.15)';ctx.fill();
+      ctx.strokeStyle='rgba(255,92,120,.6)';ctx.lineWidth=2.5;ctx.stroke();
+      txt(ctx,'두 기체는 성질이 다르다 → 서로 다른 물질!',W*.50,H*.02+26,29,'#ff8fa3');
+    }
+  };
+};
+</script>
+
+<script>
+/* =====================================================================
+   슬라이드 — Ⅳ. 물질의 구성 / 1. 원소와 원자 / 01. 원소와 화합물
+   「물의 분해 실험하기」 (교과서 138쪽 · 해 보기 활동지)
+   ===================================================================== */
+const CH1='① 실험 준비', CH2='② 실험 과정', CH3='③ 실험 결과',
+      CH4='④ 과학적 결론', CH5='⑤ 개념 확인 문제';
+const CHN={1:CH1,2:CH2,3:CH3,4:CH4,5:CH5};
+
+/* ---------------- 표지 ---------------- */
+S({ch:1,chName:CH1,cover:true,tocName:'표지',
+  body:`<div class="big">물의 분해 실험하기</div>
+    <div class="mid">전기 분해 장치로 물을 나누어 보자</div>
+    <div class="goal">Ⅳ. 물질의 구성 ▸ 1. 원소와 원자 ▸ 01. 원소와 화합물 &nbsp;|&nbsp; 교과서 138쪽</div>
+    <div class="hint">화면을 클릭하거나 <b>Space</b> 를 누르면 한 단계씩 진행됩니다 &nbsp;·&nbsp; <b>T</b> 목차 &nbsp;·&nbsp; <b>A</b> 정답 모두 보기 &nbsp;·&nbsp; <b>R</b> 처음부터 &nbsp;·&nbsp; <b>F</b> 전체 화면</div>`
+});
+
+/* ---------------- 학습 목표 ---------------- */
+S({ch:1,chName:CH1,chip:'목표',title:'오늘의 학습 목표',tocName:'학습 목표',
+  body:`<div class="panel glow" style="font-size:36px;line-height:1.65">
+      <span class="hl">전기 분해 장치</span>로 물을 분해하여,<br>
+      물이 <span class="bl">두 가지 다른 물질</span>로 이루어져 있음을 설명할 수 있다.
+    </div>
+    <div class="panel step small" style="line-height:1.6">
+      <div class="dash">물에 전류를 흘리면 어떤 일이 일어날까?</div>
+      <div class="dash">(−)극과 (+)극에서 나오는 기체는 <span class="q">같은 물질일까, 다른 물질일까?</span></div>
+      <div class="dash">이 실험이 끝나면 <span class="q">물이 원소인지 화합물인지</span> 판단할 수 있다.</div>
+    </div>`
+});
+
+/* ---------------- 준비물 ---------------- */
+S({ch:1,chName:CH1,chip:'준비물',title:'무엇이 필요할까?',tocName:'준비물',
+  body:`<div class="panel tight small" style="text-align:center">
+      전기 분해 장치 · 물 · 수산화 나트륨 · 전원 장치 · 점화 장치 · 주사기 · 실험복 · 실험용 장갑
+    </div>
+    ${A('tools',430)}
+    <div class="tiny" style="text-align:center">클릭할 때마다 준비물이 하나씩 켜집니다 — 모둠별로 확인해 보세요.</div>`,
+  extra:6,
+  step(n,el){const a=el._a.tools;if(a)a.setPhase(Math.min(n,6));}
+});
+
+/* ---------------- 안전 유의사항 ---------------- */
+S({ch:1,chName:CH1,chip:'유의할 점',title:'실험 전, 안전부터!',tocName:'안전 유의사항',
+  body:`${A('safety',400)}
+    <div class="panel warn small" style="line-height:1.6">
+      <div class="dash step">전기 분해 장치와 <span class="hl">점화 장치</span>를 사용할 때 안전에 주의한다.</div>
+      <div class="dash step">불꽃은 <span class="hl">얼굴에서 멀리</span> 두고, 주사기 입구를 사람 쪽으로 향하지 않는다.</div>
+      <div class="dash step">수산화 나트륨은 피부를 상하게 할 수 있으므로 <span class="hl">직접 만지지 않는다</span>.</div>
+      <div class="dash step">실험복과 실험용 장갑을 반드시 착용한다.</div>
+    </div>`,
+  step(n,el){const a=el._a.safety;if(a)a.setPhase(Math.min(n,4));}
+});
+
+/* ---------------- 장치 살펴보기 ---------------- */
+S({ch:2,chName:CH2,chip:'장치',title:'전기 분해 장치 살펴보기',tocName:'장치 살펴보기',
+  rows:true,
+  body:`<div class="col w4">
+      <div class="panel small" style="line-height:1.7">
+        <div class="dash step">수조에 <span class="hl">수산화 나트륨을 조금 녹인 물</span>을 채운다.</div>
+        <div class="dash step">두 개의 관 속에 <span class="cN">(−)극</span>과 <span class="cP">(+)극</span> 전극이 들어 있다.</div>
+        <div class="dash step">전극을 <span class="hl">전원 장치</span>에 전선으로 연결한다.</div>
+        <div class="dash step">전원을 켜면 전류가 흐르며 <span class="q">기체</span>가 발생한다.</div>
+      </div>
+    </div>
+    <div class="col w6">${A('apparatus',600)}</div>`,
+  step(n,el){const a=el._a.apparatus;if(a)a.setPhase(Math.min(n,4));}
+});
+
+/* ---------------- 과정 ➊ ---------------- */
+S({ch:2,chName:CH2,chip:'과정 ➊',title:'수산화 나트륨 수용액을 넣고 전극을 연결한다',
+  tocName:'과정 ➊ 장치 준비',rows:true,
+  body:`<div class="col w4">
+      <div class="panel small" style="line-height:1.7">
+        <div class="dash step">전기 분해 장치에 <span class="hl">물</span>을 넣는다.</div>
+        <div class="dash step">물에 <span class="hl">수산화 나트륨을 조금</span> 녹인다.</div>
+        <div class="dash step">두 전극을 <span class="hl">전원 장치</span>에 연결한다.</div>
+        <div class="dash step">전원을 켜면 두 전극에서 <span class="q">기포</span>가 올라온다.</div>
+      </div>
+      <div class="panel warn tiny step">수산화 나트륨은 소량만! 장갑을 끼고 다룬다.</div>
+    </div>
+    <div class="col w6">${A('setup',600)}</div>`,
+  step(n,el){const a=el._a.setup;if(a)a.setPhase(Math.min(n,4));}
+});
+
+/* ---------------- 핵심 질문 : 왜 수산화 나트륨? ---------------- */
+S({ch:2,chName:CH2,chip:'생각해 보기',title:'왜 순수한 물을 쓰지 않고 수산화 나트륨을 넣을까?',
+  tocName:'★ 왜 수산화 나트륨을 넣을까?',cls:'dense',
+  body:`${A('electrolyte',480)}
+    <div class="panel key" style="font-size:29px;line-height:1.65">
+      <div class="dash step">순수한 물은 전류가 <span class="bl">거의 흐르지 않는다</span>.</div>
+      <div class="dash step">수산화 나트륨을 녹이면 물속에 <span class="bl">이온</span>이 생겨 전하를 옮길 수 있다.</div>
+      <div class="dash step">이온이 각 전극으로 이동하면서 <span class="bl">전류가 잘 흐르게</span> 된다.</div>
+    </div>`,
+  step(n,el){const a=el._a.electrolyte;if(a)a.setPhase(Math.min(n,3));}
+});
+
+S({ch:2,chName:CH2,chip:'핵심 정리',title:'수산화 나트륨의 역할',tocName:'★ 수산화 나트륨의 역할',
+  body:`<div class="panel glow" style="font-size:35px;line-height:1.7;text-align:center">
+      수산화 나트륨은 물에 녹아 <span class="bl">전류가 잘 흐르도록</span> 해 주는<br>
+      <span class="bl">전해질</span> 역할을 한다.
+    </div>
+    <div class="panel step small" style="line-height:1.6">
+      <div class="dash">수산화 나트륨 자신이 분해되어 기체가 되는 것이 <span class="hl">아니다</span>.</div>
+      <div class="dash">실제로 분해되는 물질은 <span class="q">물</span>이다. 수산화 나트륨은 전류가 흐를 수 있는 <span class="q">길</span>을 만들어 줄 뿐!</div>
+    </div>
+    <div class="panel warn step tiny">＊ 전해질 : 물에 녹아 전류가 흐르게 하는 물질. 소금(염화 나트륨), 황산 나트륨 등도 같은 역할을 할 수 있다.</div>`
+});
+
+/* ---------------- 과정 ➋ 기체 발생 ---------------- */
+S({ch:2,chName:CH2,chip:'과정 ➋',title:'두 개의 관에 모이는 기체를 관찰한다',tocName:'과정 ➋ 기체 관찰',
+  rows:true,
+  body:`<div class="col w4">
+      <div class="panel small" style="line-height:1.7">
+        <div class="dash step">전원을 켜면 두 전극에서 <span class="hl">기포</span>가 발생한다.</div>
+        <div class="dash step">기체가 관 위쪽에 모이면서 <span class="hl">수면이 내려간다</span>.</div>
+        <div class="dash step"><span class="cN">(−)극</span> 기체의 부피가 <span class="cP">(+)극</span>의 <span class="bl">약 2배</span>이다.</div>
+        <div class="dash step">두 기체가 <span class="q">같은 물질인지</span> 확인해 보아야 한다.</div>
+      </div>
+    </div>
+    <div class="col w6">${A('bubbles',600)}</div>`,
+  step(n,el){const a=el._a.bubbles;if(a)a.setPhase(Math.min(n,3));}
+});
+
+/* ---------------- 과정 ➋ 주사기 포집 ---------------- */
+S({ch:2,chName:CH2,chip:'과정 ➋',title:'고무마개에 주사기를 꽂아 각 기체를 모은다',tocName:'과정 ➋ 주사기로 모으기',
+  rows:true,
+  body:`<div class="col w4">
+      <div class="panel small" style="line-height:1.7">
+        <div class="dash step">각 관의 <span class="hl">고무마개</span>를 확인한다.</div>
+        <div class="dash step">고무마개 구멍에 <span class="hl">주사기</span>를 꽂는다.</div>
+        <div class="dash step">피스톤을 <span class="hl">천천히 당겨</span> 기체를 모은다.</div>
+        <div class="dash step">두 기체를 <span class="q">섞이지 않게</span> 따로 모은다.</div>
+      </div>
+    </div>
+    <div class="col w6">${A('collect',600)}</div>`,
+  step(n,el){const a=el._a.collect;if(a)a.setPhase(Math.min(n,4));}
+});
+
+/* ---------------- 과정 ➌ 안내 ---------------- */
+S({ch:3,chName:CH3,chip:'과정 ➌',title:'각 주사기 입구에 불꽃을 가까이 가져간다',tocName:'과정 ➌ 불꽃 확인 예고',
+  body:`<div class="panel glow" style="font-size:34px;line-height:1.7">
+      각 주사기의 입구에 <span class="hl">불꽃</span>을 가까이 가져가고,<br>주사기의 피스톤을 <span class="hl">천천히</span> 누른다.
+    </div>
+    <div style="display:flex;gap:26px;align-items:stretch">
+      <div class="col"><div class="panel h2 step" style="font-size:30px;line-height:1.55">
+        <span class="tag h2">(−)극 기체</span><br><br>불꽃을 가까이하면?<br><span class="q">→ 다음 슬라이드에서 확인!</span>
+      </div></div>
+      <div class="col"><div class="panel o2 step" style="font-size:30px;line-height:1.55">
+        <span class="tag o2">(+)극 기체</span><br><br>꺼져 가는 불씨를 가까이하면?<br><span class="q">→ 다음 슬라이드에서 확인!</span>
+      </div></div>
+    </div>
+    <div class="panel warn step tiny">＊ 유의할 점 : 수소는 불꽃을 갖다 대면 ‘펑’ 소리를 내면서 타고, 산소는 꺼져 가는 불씨를 갖다 대면 불꽃이 더 크게 타오르게 한다.</div>`
+});
+
+/* ---------------- 수소 확인 ---------------- */
+S({ch:3,chName:CH3,chip:'결과 ①',title:'(−)극 기체에 불꽃을 가까이하면?',tocName:'★ (−)극 : ‘펑!’ → 수소',
+  body:`${A('popTest',500)}
+    <div class="panel h2" style="font-size:30px;line-height:1.6">
+      <div class="dash step">주사기 입구에 <span class="hl">불꽃</span>을 가까이 가져간다.</div>
+      <div class="dash step">피스톤을 천천히 눌러 기체를 <span class="hl">조금씩</span> 내보낸다.</div>
+      <div class="dash step"><span class="bl">‘펑’</span> 소리를 내면서 불꽃이 탄다!</div>
+      <div class="dash step">이 기체는 <span class="bl">수소</span>이다.</div>
+    </div>`,
+  step(n,el){const a=el._a.popTest;if(a)a.setPhase(Math.min(n,4));}
+});
+
+/* ---------------- 산소 확인 ---------------- */
+S({ch:3,chName:CH3,chip:'결과 ②',title:'(+)극 기체에 꺼져 가는 향불을 가까이하면?',tocName:'★ (+)극 : 불꽃 되살아남 → 산소',
+  body:`${A('glowTest',500)}
+    <div class="panel o2" style="font-size:30px;line-height:1.6">
+      <div class="dash step">거의 꺼져 가는 <span class="hl">향불(불씨)</span>을 주사기 입구에 가까이 한다.</div>
+      <div class="dash step">피스톤을 천천히 눌러 기체를 내보낸다.</div>
+      <div class="dash step">꺼져 가던 불꽃이 <span class="bl">다시 크게 타오른다</span>!</div>
+      <div class="dash step">이 기체는 <span class="bl">산소</span>이다.</div>
+    </div>`,
+  step(n,el){const a=el._a.glowTest;if(a)a.setPhase(Math.min(n,4));}
+});
+
+/* ---------------- 두 기체 비교 ---------------- */
+S({ch:3,chName:CH3,chip:'비교',title:'두 기체는 같을까, 다를까?',tocName:'두 기체 비교',
+  body:`${A('twoTest',470)}
+    <table class="t sm">
+      <tr><th style="width:26%"></th><th>(−)극에서 모은 기체</th><th>(+)극에서 모은 기체</th></tr>
+      <tr><td class="lbl">불꽃을 가까이하면</td>
+          <td><span class="bl">‘펑’ 소리를 내며 탄다</span></td>
+          <td><span class="bl">꺼져 가던 불꽃이 크게 타오른다</span></td></tr>
+      <tr><td class="lbl">기체의 이름</td>
+          <td><span class="bl">수소</span></td><td><span class="bl">산소</span></td></tr>
+      <tr><td class="lbl">부피비</td><td><span class="bl">2</span></td><td><span class="bl">1</span></td></tr>
+    </table>`,
+  step(n,el){const a=el._a.twoTest;if(a)a.setPhase(Math.min(n,3));}
+});
+
+/* ---------------- 활동지 발문 ■ ---------------- */
+S({ch:3,chName:CH3,chip:'활동지 · 과정',title:'■ 각각 어떤 현상이 일어나는가?',tocName:'[활동지] 각각 어떤 현상?',
+  body:`<div class="qbox">주사기의 피스톤을 천천히 눌렀을 때, 두 주사기의 입구에서 각각 어떤 현상이 일어났는지 써 봅시다.</div>
+    <div class="panel key" style="font-size:33px;line-height:1.85">
+      한 주사기의 입구에서는 <span class="bl">불꽃이 크게 타오르고</span>,<br>
+      다른 주사기의 입구에서는 <span class="bl">‘펑’ 소리를 내면서 불꽃이 탄다</span>.
+    </div>
+    <div class="panel step small">
+      <div class="dash">불꽃이 크게 타오른 쪽 → <span class="cO">(+)극 · 산소</span></div>
+      <div class="dash">‘펑’ 소리가 난 쪽 → <span class="cH">(−)극 · 수소</span></div>
+    </div>`
+});
+
+/* ---------------- 활동지 정리 ● ---------------- */
+S({ch:3,chName:CH3,chip:'활동지 · 정리',title:'● 두 개의 관에 모이는 기체는 같은 물질인가?',
+  tocName:'[활동지] 같은 물질인가?',
+  body:`<div class="panel key" style="font-size:33px;line-height:1.85">
+      두 개의 관에 모인 기체가 각각 불꽃과 만났을 때 일어나는 현상이
+      <span class="bl">다르므로</span>,<br>두 기체는 <span class="bl">서로 다른 물질</span>이다.
+    </div>
+    <div class="panel step small" style="line-height:1.6">
+      <div class="dash">성질이 다르면 <span class="q">다른 물질</span>이다 — 물질을 구분하는 기본 원리!</div>
+      <div class="dash">즉, 물에서 <span class="cH">수소</span>와 <span class="cO">산소</span>라는 <span class="hl">두 가지 다른 물질</span>이 나왔다.</div>
+    </div>`
+});
+
+/* ---------------- 물의 분해 모형 ---------------- */
+S({ch:4,chName:CH4,chip:'모형',title:'물 분자는 어떻게 분해될까?',tocName:'★ 물의 분해 모형',
+  body:`${A('decompose',520)}
+    <div class="panel" style="font-size:29px;line-height:1.6">
+      <div class="dash step">전류를 흘려 주면 물 분자의 <span class="hl">결합이 끊어진다</span>.</div>
+      <div class="dash step">떨어져 나온 원자들이 다시 결합해 <span class="cH">수소 분자</span>와 <span class="cO">산소 분자</span>가 된다.</div>
+      <div class="dash step">그래서 물이 분해되면 <span class="bl">수소</span>와 <span class="bl">산소</span>가 <span class="bl">2 : 1</span>의 부피비로 생긴다.</div>
+    </div>`,
+  step(n,el){const a=el._a.decompose;if(a)a.setPhase(Math.min(n,3));}
+});
+
+/* ---------------- 실험 결과 ---------------- */
+S({ch:4,chName:CH4,chip:'실험 결과',title:'이 실험으로 알게 된 것',tocName:'★ 실험 결과 정리',
+  body:`<div class="panel glow" style="font-size:35px;line-height:1.8;text-align:center">
+      물에 전류를 흘려 주면 물이 <span class="bl">분해</span>되어<br>
+      <span class="bl">수소</span>와 <span class="bl">산소</span>가 생성된다.
+    </div>
+    <div class="eqrow step" style="justify-content:center;font-size:40px;font-weight:900">
+      <span style="color:#bfe9ff">물</span><span class="arrowR">→</span>
+      <span class="tag h2" style="font-size:34px">수소</span><span>＋</span>
+      <span class="tag o2" style="font-size:34px">산소</span>
+      <span class="tiny" style="margin-left:14px">(부피비 2 : 1)</span>
+    </div>
+    <div class="panel step small" style="line-height:1.6">
+      <div class="dash">물은 한 가지 물질처럼 보이지만, 실제로는 <span class="hl">두 가지 다른 물질</span>로 이루어져 있다.</div>
+      <div class="dash">이렇게 <span class="q">분해되어 더 간단한 물질이 되는가</span>가 원소와 화합물을 구분하는 기준이 된다.</div>
+    </div>`
+});
+
+/* ---------------- 원소 vs 화합물 ---------------- */
+S({ch:4,chName:CH4,chip:'과학적 결론',title:'물은 원소일까, 화합물일까?',tocName:'★ 원소 vs 화합물',
+  body:`${A('compound',500)}
+    <div class="panel key" style="font-size:30px;line-height:1.6">
+      <div class="dash step">물은 전기 분해로 더 간단한 물질로 <span class="hl">나누어졌다</span> → 물은 원소가 <span class="hl">아니다</span>.</div>
+      <div class="dash step">수소와 산소는 더 이상 분해되지 않는 물질 → <span class="hl">원소</span>이다.</div>
+      <div class="dash step">따라서 물은 두 원소가 결합해 만들어진 <span class="hl">화합물</span>이다.</div>
+    </div>`,
+  step(n,el){const a=el._a.compound;if(a)a.setPhase(Math.min(n,3));}
+});
+
+/* ---------------- 최종 결론 ---------------- */
+S({ch:4,chName:CH4,chip:'최종 결론',title:'오늘의 결론',tocName:'★ 오늘의 결론',
+  body:`<div class="panel key" style="font-size:36px;line-height:1.85;text-align:center">
+      물은 하나의 <span class="bl">원소</span>가 아니라,<br>
+      <span class="bl">수소</span>와 <span class="bl">산소</span>가 <span class="bl">일정한 비율</span>로 결합한 <span class="bl">화합물</span>이다.
+    </div>
+    <table class="t sm step">
+      <tr><th style="width:22%">구분</th><th>원소</th><th>화합물</th></tr>
+      <tr><td class="lbl">뜻</td><td>더 이상 다른 물질로 분해되지 않는 물질</td><td>두 가지 이상의 원소가 결합해 이루어진 물질</td></tr>
+      <tr><td class="lbl">예</td><td class="cH">수소, 산소, 탄소, 철 …</td><td class="cO">물, 이산화 탄소, 설탕 …</td></tr>
+    </table>`
+});
+</script>
+
+<script>
+/* =====================================================================
+   개념 확인 문제
+   ===================================================================== */
+function QT(ch,no,q,body,note,opt){
+  S(Object.assign({ch,chName:CHN[ch],chip:'개념 확인 문제',title:`${no}. ${q}`,
+    tocName:`[문제 ${no}] ${q.replace(/<[^>]+>/g,'').slice(0,16)}`,
+    body:body+(note?`<div class="qnote step">${note}</div>`:'')},opt||{}));
+}
+function QOX(ch,no,q,items,note,opt){
+  QT(ch,no,q,`<div class="qlist">`+items.map(([t,a],i)=>
+    `<div class="qitem"><span class="mk">(${i+1})</span><span class="txt">${t}</span>
+     <span class="bl" style="margin-left:auto;min-width:70px;text-align:center">${a}</span></div>`).join('')+`</div>`,note,opt);
+}
+function QSA(ch,no,q,items,note,opt,w){
+  QT(ch,no,q,`<div class="qlist">`+items.map(([t,a],i)=>
+    `<div class="qitem"><span class="mk">(${i+1})</span><span class="txt">${t}</span>
+     <span class="bl" style="margin-left:auto;min-width:${w||190}px;text-align:center">${a}</span></div>`).join('')+`</div>`,note,opt);
+}
+function QMC(ch,no,q,choices,ans,note,extra,opt){
+  const c='①②③④⑤';
+  QT(ch,no,q,(extra||'')+`<div class="qlist">`+choices.map((t,i)=>
+    `<div class="qitem ${i===ans?'ans step':''}"><span class="mk">${c[i]}</span><span class="txt">${t}</span></div>`).join('')+`</div>`,note,opt);
+}
+
+/* ---------------- 문제 ---------------- */
+QOX(5,1,'맞으면 ○, 틀리면 ×를 써 봅시다.',[
+  ['순수한 물에 전류를 흘려 주면 물이 잘 분해된다.','×'],
+  ['수산화 나트륨은 물에 전류가 잘 흐르도록 해 주는 역할을 한다.','○'],
+  ['(−)극에 모인 기체에 불꽃을 가까이하면 ‘펑’ 소리를 내며 탄다.','○'],
+  ['(+)극에 모인 기체는 스스로 잘 타는 성질이 있다.','×'],
+  ['두 관에 모인 기체는 성질이 다르므로 서로 다른 물질이다.','○']
+],'(1) 순수한 물은 전류가 거의 흐르지 않아 분해되지 않습니다. &nbsp;(4) 산소는 스스로 타지 않고, <b>다른 물질이 타는 것을 돕는</b> 기체입니다.');
+
+QSA(5,2,'물의 전기 분해 실험 결과를 정리해 봅시다.',[
+  ['(−)극에 모인 기체의 이름은?','수소'],
+  ['(+)극에 모인 기체의 이름은?','산소'],
+  ['(−)극 기체와 (+)극 기체의 부피비는?','2 : 1'],
+  ['(−)극 기체를 확인하는 방법은?','불꽃을 가까이한다'],
+  ['(+)극 기체를 확인하는 방법은?','꺼져 가는 향불을 넣는다']
+],null,{cls:'dense'},300);
+
+QMC(5,3,'물의 전기 분해 실험에서 물에 수산화 나트륨을 조금 녹이는 까닭으로 옳은 것은?',[
+  '물의 온도를 높이기 위해서',
+  '물에 전류가 잘 흐르도록 하기 위해서',
+  '수산화 나트륨이 분해되어 기체가 생기게 하기 위해서',
+  '수소와 산소가 섞이지 않게 하기 위해서',
+  '물의 색을 눈에 잘 보이게 하기 위해서'
+],1,'수산화 나트륨은 물에 녹아 <b>전해질</b> 역할을 합니다. 분해되는 물질은 어디까지나 <b>물</b>이에요.');
+
+QMC(5,4,'(+)극에 모인 기체를 확인하는 방법과 그 결과로 옳은 것은?',[
+  '불꽃을 가까이하면 ‘펑’ 소리를 내며 탄다.',
+  '석회수에 넣으면 뿌옇게 흐려진다.',
+  '꺼져 가는 향불을 가까이하면 불꽃이 다시 크게 타오른다.',
+  '푸른색 리트머스 종이를 붉게 변화시킨다.',
+  '냄새를 맡으면 자극적인 냄새가 난다.'
+],2,'① 은 <b>(−)극의 수소</b>를 확인하는 방법, ② 는 <b>이산화 탄소</b>를 확인하는 방법입니다.');
+
+QMC(5,5,'이 실험 결과로부터 알 수 있는 사실로 가장 옳은 것은?',[
+  '물은 더 이상 분해되지 않는 원소이다.',
+  '물은 수소와 산소가 섞여 있는 혼합물이다.',
+  '물은 수소와 산소로 분해되는 화합물이다.',
+  '수소와 산소는 물이 분해되어 만들어진 화합물이다.',
+  '물속에는 수산화 나트륨이 들어 있어서 기체가 생긴다.'
+],2,'물은 분해되므로 원소가 아니고, 수소와 산소가 <b>일정한 비율로 결합</b>해 있으므로 혼합물도 아닙니다.');
+
+QT(5,6,'물이 원소가 아니라 화합물인 까닭을 써 봅시다.',
+  `<div class="qbox">전기 분해 실험 결과를 근거로 설명해 봅시다.</div>
+   <div class="panel key" style="font-size:31px;line-height:1.8">
+     물에 전류를 흘려 주면 <span class="bl">수소</span>와 <span class="bl">산소</span>로 <span class="bl">분해</span>되는데,<br>
+     원소는 더 이상 분해되지 않는 물질이므로 물은 원소가 아니라<br>
+     두 원소가 <span class="bl">일정한 비율</span>로 결합한 <span class="bl">화합물</span>이다.
+   </div>`,
+  '핵심 낱말 : <b>분해 · 수소 · 산소 · 일정한 비율 · 화합물</b>');
+
+/* ---------------- 마무리 ---------------- */
+S({ch:5,chName:CH5,chip:'마무리',title:'한 문장으로 정리하기',tocName:'한 문장 정리',
+  body:`<div class="panel glow" style="font-size:37px;line-height:1.9;text-align:center">
+      물에 전류를 흘려 주면 <span class="bl">수소</span>와 <span class="bl">산소</span>로 분해되므로,<br>
+      물은 <span class="bl">화합물</span>이다.
+    </div>
+    <div class="tiny step" style="text-align:center">수고했습니다! &nbsp;·&nbsp; <b>T</b> 를 누르면 목차로 돌아가 원하는 장면을 다시 볼 수 있습니다.</div>`
+});
+
+buildDeck();
+fit();
+go(0,0);
+</script>
+
+</body>
+</html>
